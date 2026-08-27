@@ -7,6 +7,54 @@ Compile the application first with Java 25:
 javac -d /tmp/daddy-classes src/main/java/*.java
 ```
 
+## Test case: delete removes and renumbers tasks
+Aim: Verify that deleting a valid task removes it and that the remaining tasks are renumbered.
+
+### Command
+java -cp /tmp/daddy-classes Daddy
+
+### Input
+todo keep me
+todo remove me
+delete 2
+list
+bye
+
+### Expected output
+```text
+    ____________________________________________________________
+     ____                      _       _       
+    |  _ \   __ _   __| |   __| |  _   _ 
+    | | | | / _` | / _` |  / _` | | | | |
+    | | | || (_| || (_| | | (_| | | |_| |
+    | |_| | \__,_| \__,_|  \__,_|  \__, |
+    |____/                          |___/ 
+    Hello, little one.
+    What can I assist you with today ;)?
+    ____________________________________________________________
+    ____________________________________________________________
+     Got it. I've added this task:
+       [T][ ] keep me
+     Now you have 1 tasks in the list.
+    ____________________________________________________________
+    ____________________________________________________________
+     Got it. I've added this task:
+       [T][ ] remove me
+     Now you have 2 tasks in the list.
+    ____________________________________________________________
+    ____________________________________________________________
+     Noted. I've removed this task:
+       [T][ ] remove me
+     Now you have 1 tasks in the list.
+    ____________________________________________________________
+    ____________________________________________________________
+     Here are the tasks in your list:
+     1.[T][ ] keep me
+    ____________________________________________________________
+    Bye. See you soon :)
+    ____________________________________________________________
+```
+
 ## Test case: interleaved invalid commands preserve state
 Aim: Verify that malformed commands report specific corrections and do not add invalid tasks or alter the valid task list.
 
