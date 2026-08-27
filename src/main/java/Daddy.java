@@ -3,6 +3,7 @@ import java.util.Scanner;
 public class Daddy {
     private static final String INDENT = "    ";
     private static final String[] tasks = new String[100];
+    private static final boolean[] completedTasks = new boolean[100];
     private static int taskCount = 0;
 
     public static void main(String[] args) {
@@ -35,6 +36,8 @@ public class Daddy {
                 break;
             } else if (input.equalsIgnoreCase("list")) {
                 printList();
+            } else if (input.toLowerCase().startsWith("mark ")) {
+                markTask(input.substring(5).trim());
             } else {
                 addTask(input);
             }
@@ -54,9 +57,35 @@ public class Daddy {
 
     private static void printList() {
         System.out.println(INDENT + "____________________________________________________________");
+        System.out.println(INDENT + " Here are the tasks in your list:");
         for (int i = 0; i < taskCount; i++) {
-            System.out.println(INDENT + " " + (i + 1) + ". " + tasks[i]);
+            String status = completedTasks[i] ? "[X]" : "[ ]";
+            System.out.println(INDENT + " " + (i + 1) + "." + status + " " + tasks[i]);
         }
+        System.out.println(INDENT + "____________________________________________________________");
+    }
+
+    private static void markTask(String taskNumber) {
+        try {
+            int taskIndex = Integer.parseInt(taskNumber) - 1;
+            if (taskIndex < 0 || taskIndex >= taskCount) {
+                printInvalidTaskNumber();
+                return;
+            }
+
+            completedTasks[taskIndex] = true;
+            System.out.println(INDENT + "____________________________________________________________");
+            System.out.println(INDENT + " Nice! I've marked this task as done:");
+            System.out.println(INDENT + "   [X] " + tasks[taskIndex]);
+            System.out.println(INDENT + "____________________________________________________________");
+        } catch (NumberFormatException exception) {
+            printInvalidTaskNumber();
+        }
+    }
+
+    private static void printInvalidTaskNumber() {
+        System.out.println(INDENT + "____________________________________________________________");
+        System.out.println(INDENT + " Please provide a valid task number.");
         System.out.println(INDENT + "____________________________________________________________");
     }
 
