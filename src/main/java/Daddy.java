@@ -2,8 +2,7 @@ import java.util.Scanner;
 
 public class Daddy {
     private static final String INDENT = "    ";
-    private static final String[] tasks = new String[100];
-    private static final boolean[] completedTasks = new boolean[100];
+    private static final Task[] tasks = new Task[100];
     private static int taskCount = 0;
 
     public static void main(String[] args) {
@@ -49,7 +48,7 @@ public class Daddy {
     }
 
     private static void addTask(String task) {
-        tasks[taskCount] = task;
+        tasks[taskCount] = new Task(task);
         taskCount++;
 
         System.out.println(INDENT + "____________________________________________________________");
@@ -61,8 +60,8 @@ public class Daddy {
         System.out.println(INDENT + "____________________________________________________________");
         System.out.println(INDENT + " Here are the tasks in your list:");
         for (int i = 0; i < taskCount; i++) {
-            String status = completedTasks[i] ? "[X]" : "[ ]";
-            System.out.println(INDENT + " " + (i + 1) + "." + status + " " + tasks[i]);
+            System.out.println(INDENT + " " + (i + 1) + ".[" + tasks[i].getStatusIcon() + "] "
+                    + tasks[i].getDescription());
         }
         System.out.println(INDENT + "____________________________________________________________");
     }
@@ -75,10 +74,10 @@ public class Daddy {
                 return;
             }
 
-            completedTasks[taskIndex] = true;
+            tasks[taskIndex].markAsDone();
             System.out.println(INDENT + "____________________________________________________________");
             System.out.println(INDENT + " Nice! I've marked this task as done:");
-            System.out.println(INDENT + "   [X] " + tasks[taskIndex]);
+            System.out.println(INDENT + "   [X] " + tasks[taskIndex].getDescription());
             System.out.println(INDENT + "____________________________________________________________");
         } catch (NumberFormatException exception) {
             printInvalidTaskNumber();
@@ -99,10 +98,10 @@ public class Daddy {
                 return;
             }
 
-            completedTasks[taskIndex] = false;
+            tasks[taskIndex].markAsNotDone();
             System.out.println(INDENT + "____________________________________________________________");
             System.out.println(INDENT + " OK, I've marked this task as not done yet:");
-            System.out.println(INDENT + "   [ ] " + tasks[taskIndex]);
+            System.out.println(INDENT + "   [ ] " + tasks[taskIndex].getDescription());
             System.out.println(INDENT + "____________________________________________________________");
         } catch (NumberFormatException exception) {
             printInvalidTaskNumber();
