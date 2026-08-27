@@ -4,14 +4,8 @@ public class Deadline extends Task {
 
     /** Creates a deadline task. */
     public Deadline(String description, String deadline) {
-        super(description);
+        super(description, TaskType.DEADLINE);
         this.deadline = deadline;
-    }
-
-    /** Returns the marker for this task type. */
-    @Override
-    public String getTypeIcon() {
-        return "[D]";
     }
 
     /** Returns the description together with the deadline. */

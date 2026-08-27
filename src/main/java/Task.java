@@ -3,6 +3,7 @@
  */
 public class Task {
     private final String description;
+    private final TaskType type;
     private boolean isDone;
 
     /**
@@ -11,7 +12,13 @@ public class Task {
      * @param description the task description
      */
     public Task(String description) {
+        this(description, TaskType.GENERAL);
+    }
+
+    /** Creates a task with the specified type. */
+    protected Task(String description, TaskType type) {
         this.description = description;
+        this.type = type;
         this.isDone = false;
     }
 
@@ -58,6 +65,6 @@ public class Task {
      * @return an empty marker for a general task
      */
     public String getTypeIcon() {
-        return "";
+        return type.getIcon();
     }
 }

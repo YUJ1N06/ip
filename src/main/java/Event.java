@@ -5,15 +5,9 @@ public class Event extends Task {
 
     /** Creates an event task. */
     public Event(String description, String from, String to) {
-        super(description);
+        super(description, TaskType.EVENT);
         this.from = from;
         this.to = to;
-    }
-
-    /** Returns the marker for this task type. */
-    @Override
-    public String getTypeIcon() {
-        return "[E]";
     }
 
     /** Returns the description together with the event's time range. */
