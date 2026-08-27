@@ -37,6 +37,8 @@ public class Daddy {
                 printList();
             } else if (input.toLowerCase().startsWith("todo ")) {
                 addTodo(input.substring(5).trim());
+            } else if (input.toLowerCase().startsWith("deadline ")) {
+                addDeadline(input.substring(9).trim());
             } else if (input.toLowerCase().startsWith("unmark ")) {
                 unmarkTask(input.substring(7).trim());
             } else if (input.toLowerCase().startsWith("mark ")) {
@@ -64,7 +66,7 @@ public class Daddy {
         for (int i = 0; i < taskCount; i++) {
             System.out.println(INDENT + " " + (i + 1) + "." + tasks[i].getTypeIcon()
                     + "[" + tasks[i].getStatusIcon() + "] "
-                    + tasks[i].getDescription());
+                    + tasks[i].getDisplayDescription());
         }
         System.out.println(INDENT + "____________________________________________________________");
     }
@@ -81,6 +83,22 @@ public class Daddy {
         System.out.println(INDENT + "____________________________________________________________");
     }
 
+    private static void addDeadline(String taskDetails) {
+        int byIndex = taskDetails.indexOf(" /by ");
+        String description = byIndex >= 0 ? taskDetails.substring(0, byIndex).trim() : taskDetails;
+        String deadline = byIndex >= 0 ? taskDetails.substring(byIndex + 5).trim() : "";
+        tasks[taskCount] = new Deadline(description, deadline);
+        taskCount++;
+
+        System.out.println(INDENT + "____________________________________________________________");
+        System.out.println(INDENT + " Got it. I've added this task:");
+        System.out.println(INDENT + "   " + tasks[taskCount - 1].getTypeIcon() + "["
+                + tasks[taskCount - 1].getStatusIcon() + "] "
+                + tasks[taskCount - 1].getDisplayDescription());
+        System.out.println(INDENT + " Now you have " + taskCount + " tasks in the list.");
+        System.out.println(INDENT + "____________________________________________________________");
+    }
+
     private static void markTask(String taskNumber) {
         try {
             int taskIndex = Integer.parseInt(taskNumber) - 1;
@@ -92,7 +110,7 @@ public class Daddy {
             tasks[taskIndex].markAsDone();
             System.out.println(INDENT + "____________________________________________________________");
             System.out.println(INDENT + " Nice! I've marked this task as done:");
-            System.out.println(INDENT + "   [X] " + tasks[taskIndex].getDescription());
+            System.out.println(INDENT + "   [X] " + tasks[taskIndex].getDisplayDescription());
             System.out.println(INDENT + "____________________________________________________________");
         } catch (NumberFormatException exception) {
             printInvalidTaskNumber();
@@ -116,7 +134,7 @@ public class Daddy {
             tasks[taskIndex].markAsNotDone();
             System.out.println(INDENT + "____________________________________________________________");
             System.out.println(INDENT + " OK, I've marked this task as not done yet:");
-            System.out.println(INDENT + "   [ ] " + tasks[taskIndex].getDescription());
+            System.out.println(INDENT + "   [ ] " + tasks[taskIndex].getDisplayDescription());
             System.out.println(INDENT + "____________________________________________________________");
         } catch (NumberFormatException exception) {
             printInvalidTaskNumber();

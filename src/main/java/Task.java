@@ -38,6 +38,11 @@ public class Task {
         return description;
     }
 
+    /** Returns the description used when displaying this task. */
+    public String getDisplayDescription() {
+        return description;
+    }
+
     /**
      * Returns the icon used to display this task's completion state.
      *
