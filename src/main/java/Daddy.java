@@ -36,6 +36,8 @@ public class Daddy {
                 break;
             } else if (input.equalsIgnoreCase("list")) {
                 printList();
+            } else if (input.toLowerCase().startsWith("unmark ")) {
+                unmarkTask(input.substring(7).trim());
             } else if (input.toLowerCase().startsWith("mark ")) {
                 markTask(input.substring(5).trim());
             } else {
@@ -87,6 +89,24 @@ public class Daddy {
         System.out.println(INDENT + "____________________________________________________________");
         System.out.println(INDENT + " Please provide a valid task number.");
         System.out.println(INDENT + "____________________________________________________________");
+    }
+
+    private static void unmarkTask(String taskNumber) {
+        try {
+            int taskIndex = Integer.parseInt(taskNumber) - 1;
+            if (taskIndex < 0 || taskIndex >= taskCount) {
+                printInvalidTaskNumber();
+                return;
+            }
+
+            completedTasks[taskIndex] = false;
+            System.out.println(INDENT + "____________________________________________________________");
+            System.out.println(INDENT + " OK, I've marked this task as not done yet:");
+            System.out.println(INDENT + "   [ ] " + tasks[taskIndex]);
+            System.out.println(INDENT + "____________________________________________________________");
+        } catch (NumberFormatException exception) {
+            printInvalidTaskNumber();
+        }
     }
 
     private static void printExit() {
