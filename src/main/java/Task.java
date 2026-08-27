@@ -46,4 +46,13 @@ public class Task {
     public String getStatusIcon() {
         return isDone ? "X" : " ";
     }
+
+    /**
+     * Returns the marker used to identify this task type.
+     *
+     * @return an empty marker for a general task
+     */
+    public String getTypeIcon() {
+        return "";
+    }
 }

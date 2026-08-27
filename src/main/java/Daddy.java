@@ -35,6 +35,8 @@ public class Daddy {
                 break;
             } else if (input.equalsIgnoreCase("list")) {
                 printList();
+            } else if (input.toLowerCase().startsWith("todo ")) {
+                addTodo(input.substring(5).trim());
             } else if (input.toLowerCase().startsWith("unmark ")) {
                 unmarkTask(input.substring(7).trim());
             } else if (input.toLowerCase().startsWith("mark ")) {
@@ -60,9 +62,22 @@ public class Daddy {
         System.out.println(INDENT + "____________________________________________________________");
         System.out.println(INDENT + " Here are the tasks in your list:");
         for (int i = 0; i < taskCount; i++) {
-            System.out.println(INDENT + " " + (i + 1) + ".[" + tasks[i].getStatusIcon() + "] "
+            System.out.println(INDENT + " " + (i + 1) + "." + tasks[i].getTypeIcon()
+                    + "[" + tasks[i].getStatusIcon() + "] "
                     + tasks[i].getDescription());
         }
+        System.out.println(INDENT + "____________________________________________________________");
+    }
+
+    private static void addTodo(String description) {
+        tasks[taskCount] = new Todo(description);
+        taskCount++;
+
+        System.out.println(INDENT + "____________________________________________________________");
+        System.out.println(INDENT + " Got it. I've added this task:");
+        System.out.println(INDENT + "   " + tasks[taskCount - 1].getTypeIcon() + "["
+                + tasks[taskCount - 1].getStatusIcon() + "] " + description);
+        System.out.println(INDENT + " Now you have " + taskCount + " tasks in the list.");
         System.out.println(INDENT + "____________________________________________________________");
     }
 
