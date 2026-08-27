@@ -2,6 +2,8 @@ import java.util.Scanner;
 
 public class Daddy {
     private static final String INDENT = "    ";
+    private static final String[] tasks = new String[100];
+    private static int taskCount = 0;
 
     public static void main(String[] args) {
         printGreeting();
@@ -31,14 +33,31 @@ public class Daddy {
             if (input.equalsIgnoreCase("bye")) {
                 printExit();
                 break;
+            } else if (input.equalsIgnoreCase("list")) {
+                printList();
             } else {
-                System.out.println(INDENT + "____________________________________________________________");
-                System.out.println(INDENT + input);
-                System.out.println(INDENT + "____________________________________________________________");
+                addTask(input);
             }
         }
 
         scanner.close();
+    }
+
+    private static void addTask(String task) {
+        tasks[taskCount] = task;
+        taskCount++;
+
+        System.out.println(INDENT + "____________________________________________________________");
+        System.out.println(INDENT + " added: " + task);
+        System.out.println(INDENT + "____________________________________________________________");
+    }
+
+    private static void printList() {
+        System.out.println(INDENT + "____________________________________________________________");
+        for (int i = 0; i < taskCount; i++) {
+            System.out.println(INDENT + " " + (i + 1) + ". " + tasks[i]);
+        }
+        System.out.println(INDENT + "____________________________________________________________");
     }
 
     private static void printExit() {
