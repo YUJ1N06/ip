@@ -39,6 +39,8 @@ public class Daddy {
                 addTodo(input.substring(5).trim());
             } else if (input.toLowerCase().startsWith("deadline ")) {
                 addDeadline(input.substring(9).trim());
+            } else if (input.toLowerCase().startsWith("event ")) {
+                addEvent(input.substring(6).trim());
             } else if (input.toLowerCase().startsWith("unmark ")) {
                 unmarkTask(input.substring(7).trim());
             } else if (input.toLowerCase().startsWith("mark ")) {
@@ -88,6 +90,25 @@ public class Daddy {
         String description = byIndex >= 0 ? taskDetails.substring(0, byIndex).trim() : taskDetails;
         String deadline = byIndex >= 0 ? taskDetails.substring(byIndex + 5).trim() : "";
         tasks[taskCount] = new Deadline(description, deadline);
+        taskCount++;
+
+        System.out.println(INDENT + "____________________________________________________________");
+        System.out.println(INDENT + " Got it. I've added this task:");
+        System.out.println(INDENT + "   " + tasks[taskCount - 1].getTypeIcon() + "["
+                + tasks[taskCount - 1].getStatusIcon() + "] "
+                + tasks[taskCount - 1].getDisplayDescription());
+        System.out.println(INDENT + " Now you have " + taskCount + " tasks in the list.");
+        System.out.println(INDENT + "____________________________________________________________");
+    }
+
+    private static void addEvent(String taskDetails) {
+        int fromIndex = taskDetails.indexOf(" /from ");
+        int toIndex = taskDetails.indexOf(" /to ");
+        String description = fromIndex >= 0 ? taskDetails.substring(0, fromIndex).trim() : taskDetails;
+        String from = fromIndex >= 0 && toIndex > fromIndex
+                ? taskDetails.substring(fromIndex + 7, toIndex).trim() : "";
+        String to = toIndex >= 0 ? taskDetails.substring(toIndex + 5).trim() : "";
+        tasks[taskCount] = new Event(description, from, to);
         taskCount++;
 
         System.out.println(INDENT + "____________________________________________________________");
