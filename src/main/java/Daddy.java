@@ -41,8 +41,7 @@ public class Daddy {
         String arguments = parser.getArguments(input, commandType);
         switch (commandType) {
         case BYE:
-            ui.showExit();
-            return true;
+            return execute(new ExitCommand());
         case LIST:
             ui.showTaskList(tasks);
             return false;
@@ -74,6 +73,18 @@ public class Daddy {
                     + "' means. Try todo, deadline, event, list, mark, unmark, delete, or bye.");
         }
         throw new IllegalStateException("Unhandled command type: " + commandType);
+    }
+
+    /**
+     * Executes a command object using Daddy's collaborating objects.
+     *
+     * @param command the command to execute
+     * @return whether the command ends the chat session
+     * @throws DaddyException if the command cannot be completed
+     */
+    private static boolean execute(Command command) throws DaddyException {
+        command.execute(tasks, ui, storage);
+        return command.isExit();
     }
 
     private static void listTasksOnDate(String dateText) throws DaddyException {
