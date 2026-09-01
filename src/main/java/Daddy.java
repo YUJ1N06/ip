@@ -1,8 +1,4 @@
-import java.util.List;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -12,12 +8,10 @@ import java.util.Scanner;
 
 public class Daddy {
     private static final String INDENT = "    ";
-    private static final Path DATA_FILE = Path.of("data", "duke.txt");
-    private static final Path BACKUP_FILE = Path.of("data", "duke.txt.backup");
-    private static final Path CORRUPTED_FILE = Path.of("data", "duke.txt.corrupt");
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd-MM-yyyy");
     private static final DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("dd-MM-yyyy HHmm");
     private static final TaskList tasks = new TaskList();
+    private static final Storage storage = new Storage(Path.of("data", "duke.txt"));
 
     public static void main(String[] args) {
         printGreeting();
@@ -128,7 +122,7 @@ public class Daddy {
                     + "for that. Try: todo borrow book.");
         }
         tasks.add(new Todo(description));
-        saveTasks();
+        storage.save(tasks);
 
         System.out.println(INDENT + "____________________________________________________________");
         System.out.println(INDENT + " Got it. I've added this task:");
@@ -155,7 +149,7 @@ public class Daddy {
             throw new DaddyException("That deadline date needs dd-MM-yyyy or dd-MM-yyyy HHmm format. "
                     + "Try: deadline return book /by 02-12-2019 1800");
         }
-        saveTasks();
+        storage.save(tasks);
 
         System.out.println(INDENT + "____________________________________________________________");
         System.out.println(INDENT + " Got it. I've added this task:");
@@ -186,7 +180,7 @@ public class Daddy {
             throw new DaddyException("Event times need dd-MM-yyyy or dd-MM-yyyy HHmm format. "
                     + "Try: event meeting /from 02-12-2019 1400 /to 02-12-2019 1600");
         }
-        saveTasks();
+        storage.save(tasks);
 
         System.out.println(INDENT + "____________________________________________________________");
         System.out.println(INDENT + " Got it. I've added this task:");
@@ -205,7 +199,7 @@ public class Daddy {
             }
 
             tasks.get(taskIndex).markAsDone();
-            saveTasks();
+            storage.save(tasks);
             System.out.println(INDENT + "____________________________________________________________");
             System.out.println(INDENT + " Nice! I've marked this task as done:");
             System.out.println(INDENT + "   [X] " + tasks.get(taskIndex).getDisplayDescription());
@@ -223,7 +217,7 @@ public class Daddy {
             }
 
             tasks.get(taskIndex).markAsNotDone();
-            saveTasks();
+            storage.save(tasks);
             System.out.println(INDENT + "____________________________________________________________");
             System.out.println(INDENT + " OK, I've marked this task as not done yet:");
             System.out.println(INDENT + "   [ ] " + tasks.get(taskIndex).getDisplayDescription());
@@ -241,7 +235,7 @@ public class Daddy {
             }
 
             Task removedTask = tasks.remove(taskIndex);
-            saveTasks();
+            storage.save(tasks);
             System.out.println(INDENT + "____________________________________________________________");
             System.out.println(INDENT + " Noted. I've removed this task:");
             System.out.println(INDENT + "   " + removedTask.getTypeIcon() + "[" + removedTask.getStatusIcon()
@@ -260,90 +254,8 @@ public class Daddy {
     }
 
     private static void loadTasks() {
-        if (!Files.exists(DATA_FILE)) {
-            return;
-        }
-
-        try {
-            List<String> lines = Files.readAllLines(DATA_FILE);
-            List<String> corruptedLines = new java.util.ArrayList<>();
-            for (int lineNumber = 0; lineNumber < lines.size(); lineNumber++) {
-                String line = lines.get(lineNumber);
-                if (line.isBlank()) {
-                    continue;
-                }
-                try {
-                    String[] fields = line.split("\\|", -1);
-                    Task task = createTask(fields);
-                    if ("1".equals(fields[1])) {
-                        task.markAsDone();
-                    }
-                    tasks.add(task);
-                } catch (IllegalArgumentException | ArrayIndexOutOfBoundsException exception) {
-                    corruptedLines.add("line " + (lineNumber + 1) + ": " + line);
-                    printError("Daddy skipped corrupted data on line " + (lineNumber + 1)
-                            + ". Expected T|0|description, D|0|description|date, or "
-                            + "E|0|description|from|to.");
-                }
-            }
-            if (!corruptedLines.isEmpty()) {
-                Files.copy(DATA_FILE, BACKUP_FILE, StandardCopyOption.REPLACE_EXISTING);
-                Files.write(CORRUPTED_FILE, corruptedLines);
-                printError("Daddy saved the original file as data/duke.txt.backup and "
-                        + "the bad records as data/duke.txt.corrupt so you can fix them.");
-            }
-        } catch (IOException | RuntimeException exception) {
-            printError("Daddy couldn't load the task list. Check data/duke.txt and try again.");
-        }
-    }
-
-    private static Task createTask(String[] fields) {
-        if (fields.length < 3 || !(fields[1].equals("0") || fields[1].equals("1"))) {
-            throw new IllegalArgumentException("invalid task record");
-        }
-        return switch (fields[0]) {
-        case "T" -> {
-            if (fields.length != 3) {
-                throw new IllegalArgumentException("invalid todo record");
-            }
-            yield new Todo(fields[2]);
-        }
-        case "D" -> {
-            if (fields.length != 4) {
-                throw new IllegalArgumentException("invalid deadline record");
-            }
-            yield new Deadline(fields[2], parseDateTime(fields[3]));
-        }
-        case "E" -> {
-            if (fields.length != 5) {
-                throw new IllegalArgumentException("invalid event record");
-            }
-            yield new Event(fields[2], parseDateTime(fields[3]), parseDateTime(fields[4]));
-        }
-        default -> throw new IllegalArgumentException("unknown task type");
-        };
-    }
-
-    private static void saveTasks() throws DaddyException {
-        try {
-            Files.createDirectories(DATA_FILE.getParent());
-            List<String> lines = new java.util.ArrayList<>();
-            for (Task task : tasks) {
-                String description = task.getDescription().replace("|", " ");
-                String status = task.getStatusIcon().equals("X") ? "1" : "0";
-                String line = switch (task.getType()) {
-                case TODO -> "T|" + status + "|" + description;
-                case DEADLINE -> "D|" + status + "|" + description
-                        + "|" + ((Deadline) task).getDeadline();
-                case EVENT -> "E|" + status + "|" + description
-                        + "|" + ((Event) task).getFrom() + "|" + ((Event) task).getTo();
-                case GENERAL -> "T|" + status + "|" + description;
-                };
-                lines.add(line);
-            }
-            Files.write(DATA_FILE, lines);
-        } catch (IOException exception) {
-            throw new DaddyException("Daddy couldn't save your tasks. Check that the data folder is writable.");
+        for (String message : storage.loadInto(tasks)) {
+            printError(message);
         }
     }
 
