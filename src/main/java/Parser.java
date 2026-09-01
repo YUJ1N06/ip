@@ -1,0 +1,260 @@
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+
+/**
+ * Converts complete Daddy command lines into command objects.
+ */
+public class Parser {
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+    private static final DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("dd-MM-yyyy HHmm");
+
+    /**
+     * Creates a command object from one complete user command.
+     *
+     * @param input the complete command entered by the user
+     * @return the command object that represents the user's request
+     * @throws DaddyException if the command is unknown or its arguments are invalid
+     */
+    public Command parseCommand(String input) throws DaddyException {
+        CommandType commandType = getCommandType(input);
+        String arguments = getArguments(input, commandType);
+        return switch (commandType) {
+        case BYE -> new ExitCommand();
+        case LIST, LIST_ON -> parseListCommand(commandType, arguments);
+        case TODO, DEADLINE, EVENT -> parseAddCommand(commandType, arguments);
+        case MARK, UNMARK -> parseTaskStateCommand(commandType, arguments);
+        case DELETE -> parseDeleteCommand(arguments);
+        case MARK_MISSING_ARGUMENT -> throw new DaddyException(
+                "MARK?! Mark what... Try: mark 1 (after adding a task first).");
+        case UNMARK_MISSING_ARGUMENT -> throw new DaddyException(
+                "UNMARK?! Unmark what... Try: unmark 1 (after adding a task first).");
+        case DELETE_MISSING_ARGUMENT -> throw new DaddyException(
+                "DELETE?! Delete what... Try: delete 1 (choose a task number first).");
+        case UNKNOWN -> throw new DaddyException("Daddy has no clue what '" + input
+                + "' means. Try todo, deadline, event, list, mark, unmark, delete, or bye.");
+        };
+    }
+
+    /**
+     * Determines the type of a command without changing its argument text.
+     *
+     * @param input the complete command entered by the user
+     * @return the recognized command type, or {@link CommandType#UNKNOWN}
+     */
+    private CommandType getCommandType(String input) {
+        String lowerCaseInput = input.toLowerCase();
+        if (input.equalsIgnoreCase("bye")) {
+            return CommandType.BYE;
+        } else if (input.equalsIgnoreCase("list")) {
+            return CommandType.LIST;
+        } else if (lowerCaseInput.startsWith("list on ")) {
+            return CommandType.LIST_ON;
+        } else if (input.equalsIgnoreCase("todo") || lowerCaseInput.startsWith("todo ")) {
+            return CommandType.TODO;
+        } else if (input.equalsIgnoreCase("mark")) {
+            return CommandType.MARK_MISSING_ARGUMENT;
+        } else if (input.equalsIgnoreCase("unmark")) {
+            return CommandType.UNMARK_MISSING_ARGUMENT;
+        } else if (input.equalsIgnoreCase("deadline") || lowerCaseInput.startsWith("deadline ")) {
+            return CommandType.DEADLINE;
+        } else if (input.equalsIgnoreCase("event") || lowerCaseInput.startsWith("event ")) {
+            return CommandType.EVENT;
+        } else if (input.equalsIgnoreCase("delete")) {
+            return CommandType.DELETE_MISSING_ARGUMENT;
+        } else if (lowerCaseInput.startsWith("unmark ")) {
+            return CommandType.UNMARK;
+        } else if (lowerCaseInput.startsWith("delete ")) {
+            return CommandType.DELETE;
+        } else if (lowerCaseInput.startsWith("mark ")) {
+            return CommandType.MARK;
+        } else {
+            return CommandType.UNKNOWN;
+        }
+    }
+
+    /**
+     * Extracts and trims the text after a command keyword.
+     *
+     * @param input the complete command entered by the user
+     * @param commandType the recognized command type
+     * @return the argument text, or an empty string when the command has no arguments
+     */
+    private String getArguments(String input, CommandType commandType) {
+        return switch (commandType) {
+        case LIST_ON -> input.substring(8).trim();
+        case TODO -> input.length() == 4 ? "" : input.substring(5).trim();
+        case DEADLINE -> input.length() == 8 ? "" : input.substring(9).trim();
+        case EVENT -> input.length() == 5 ? "" : input.substring(6).trim();
+        case MARK -> input.substring(5).trim();
+        case UNMARK, DELETE -> input.substring(7).trim();
+        default -> "";
+        };
+    }
+
+    /**
+     * Parses a date used by the {@code list on} command.
+     *
+     * @param dateText the user-entered date
+     * @return the parsed date
+     * @throws DaddyException if the date does not use {@code dd-MM-yyyy} format
+     */
+    private LocalDate parseListDate(String dateText) throws DaddyException {
+        try {
+            return LocalDate.parse(dateText, DATE_FORMAT);
+        } catch (DateTimeParseException exception) {
+            throw new DaddyException("That date needs dd-MM-yyyy format. Try: list on 02-12-2019");
+        }
+    }
+
+    /**
+     * Converts a one-based task number into a zero-based list index.
+     *
+     * @param taskNumber the task number entered by the user
+     * @param command the command that uses the task number
+     * @return the matching zero-based task index
+     * @throws DaddyException if the task number is not numeric
+     */
+    private int parseTaskIndex(String taskNumber, String command) throws DaddyException {
+        try {
+            return Integer.parseInt(taskNumber) - 1;
+        } catch (NumberFormatException exception) {
+            throw new DaddyException("'" + taskNumber + "' is not a task number. Try " + command + " 1, for example.");
+        }
+    }
+
+    /**
+     * Creates a read-only list command from parsed command text.
+     *
+     * @param commandType the recognized list command type
+     * @param arguments the text following the command keyword
+     * @return a command that displays tasks
+     * @throws DaddyException if a list date is invalid
+     */
+    private Command parseListCommand(CommandType commandType, String arguments) throws DaddyException {
+        return switch (commandType) {
+        case LIST -> new ListCommand();
+        case LIST_ON -> new ListOnDateCommand(parseListDate(arguments));
+        default -> throw new IllegalArgumentException("command does not list tasks");
+        };
+    }
+
+    /**
+     * Creates an add command from a task-creation command.
+     *
+     * @param commandType the recognized task-creation command type
+     * @param taskDetails the task description and date details, when applicable
+     * @return a command that adds the parsed task
+     * @throws DaddyException if the task details are incomplete or incorrectly formatted
+     */
+    private Command parseAddCommand(CommandType commandType, String taskDetails) throws DaddyException {
+        return new AddCommand(parseTask(commandType, taskDetails));
+    }
+
+    /**
+     * Creates a command that changes the done status of one task.
+     *
+     * @param commandType the recognized task-status command type
+     * @param taskNumber the user-entered one-based task number
+     * @return a command that marks or unmarks the selected task
+     * @throws DaddyException if the task number is not numeric
+     */
+    private Command parseTaskStateCommand(CommandType commandType, String taskNumber) throws DaddyException {
+        return switch (commandType) {
+        case MARK -> new MarkCommand(parseTaskIndex(taskNumber, "mark"));
+        case UNMARK -> new UnmarkCommand(parseTaskIndex(taskNumber, "unmark"));
+        default -> throw new IllegalArgumentException("command does not change task status");
+        };
+    }
+
+    /**
+     * Creates a command that deletes one task.
+     *
+     * @param taskNumber the user-entered one-based task number
+     * @return a command that deletes the selected task
+     * @throws DaddyException if the task number is not numeric
+     */
+    private Command parseDeleteCommand(String taskNumber) throws DaddyException {
+        return new DeleteCommand(parseTaskIndex(taskNumber, "delete"));
+    }
+
+    /**
+     * Creates a task from the details of a task-creation command.
+     *
+     * @param commandType the type of task to create
+     * @param taskDetails the task description and date details, when applicable
+     * @return the task described by the command
+     * @throws DaddyException if the task details are incomplete or incorrectly formatted
+     */
+    private Task parseTask(CommandType commandType, String taskDetails) throws DaddyException {
+        return switch (commandType) {
+        case TODO -> parseTodo(taskDetails);
+        case DEADLINE -> parseDeadline(taskDetails);
+        case EVENT -> parseEvent(taskDetails);
+        default -> throw new IllegalArgumentException("command does not create a task");
+        };
+    }
+
+    /** Creates a todo from its description. */
+    private Task parseTodo(String description) throws DaddyException {
+        if (description.isEmpty()) {
+            throw new DaddyException("Hmm, what are you thinking of doing today? You need a description "
+                    + "for that. Try: todo borrow book.");
+        }
+        return new Todo(description);
+    }
+
+    /** Creates a deadline from its description and {@code /by} date or time. */
+    private Task parseDeadline(String taskDetails) throws DaddyException {
+        int byIndex = taskDetails.indexOf(" /by ");
+        String description = byIndex >= 0 ? taskDetails.substring(0, byIndex).trim() : taskDetails;
+        String deadline = byIndex >= 0 ? taskDetails.substring(byIndex + 5).trim() : "";
+        if (description.isEmpty()) {
+            throw new DaddyException("What deadlines are coming up? Better hurry, add them and get them "
+                    + "done ASAP. Try: deadline return book /by Sunday.");
+        }
+        if (deadline.isEmpty()) {
+            throw new DaddyException("A deadline needs a /by date or time. Try: deadline return book /by Sunday");
+        }
+        try {
+            return new Deadline(description, parseDateTime(deadline));
+        } catch (DateTimeParseException exception) {
+            throw new DaddyException("That deadline date needs dd-MM-yyyy or dd-MM-yyyy HHmm format. "
+                    + "Try: deadline return book /by 02-12-2019 1800");
+        }
+    }
+
+    /** Creates an event from its description and {@code /from} and {@code /to} times. */
+    private Task parseEvent(String taskDetails) throws DaddyException {
+        int fromIndex = taskDetails.indexOf(" /from ");
+        int toIndex = taskDetails.indexOf(" /to ");
+        String description = fromIndex >= 0 ? taskDetails.substring(0, fromIndex).trim() : taskDetails;
+        String from = fromIndex >= 0 && toIndex > fromIndex
+                ? taskDetails.substring(fromIndex + 7, toIndex).trim() : "";
+        String to = toIndex >= 0 ? taskDetails.substring(toIndex + 5).trim() : "";
+        if (description.isEmpty()) {
+            throw new DaddyException("What exciting event are you planning? Give it a name so Daddy can "
+                    + "keep track. Try: event meeting /from Mon 2pm /to 4pm.");
+        }
+        if (from.isEmpty() || to.isEmpty()) {
+            throw new DaddyException("An event needs both /from and /to times. Try: event meeting /from Mon 2pm /to 4pm");
+        }
+        try {
+            return new Event(description, parseDateTime(from), parseDateTime(to));
+        } catch (DateTimeParseException exception) {
+            throw new DaddyException("Event times need dd-MM-yyyy or dd-MM-yyyy HHmm format. "
+                    + "Try: event meeting /from 02-12-2019 1400 /to 02-12-2019 1600");
+        }
+    }
+
+    /** Parses a date or date-time accepted in task-creation commands. */
+    private LocalDateTime parseDateTime(String value) {
+        try {
+            return LocalDateTime.parse(value, DATE_TIME_FORMAT);
+        } catch (DateTimeParseException exception) {
+            return LocalDate.parse(value, DATE_FORMAT).atTime(LocalTime.MIDNIGHT);
+        }
+    }
+}

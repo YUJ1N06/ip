@@ -41,7 +41,7 @@ Before starting the app, place these lines in `data/duke.txt`:
 ```text
 T|1|keep me
 BROKEN
-D|0|return book|Sunday
+D|0|return book|2019-12-02T00:00
 E|x|bad
 ```
 
@@ -50,6 +50,19 @@ while listing `keep me` as done and `return book` as not done. The app should
 remain usable and accept `bye` normally. It should also create
 `data/duke.txt.backup` containing the original file and
 `data/duke.txt.corrupt` containing the rejected records with line numbers.
+
+## Manual test: saved tasks load after restart
+Aim: Verify that a task saved by one app session is restored by the next session.
+
+In one session, enter:
+
+```text
+deadline return book /by 02-12-2019 1800
+bye
+```
+
+Start the app again and enter `list`. The list should contain
+`[D][ ] return book (by: Dec 2 2019 18:00)`.
 
 ## Test case: delete removes and renumbers tasks
 Aim: Verify that deleting a valid task removes it and that the remaining tasks are renumbered.

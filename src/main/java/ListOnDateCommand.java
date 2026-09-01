@@ -1,0 +1,23 @@
+import java.time.LocalDate;
+
+/**
+ * Displays the deadline and event tasks that occur on a specific date.
+ */
+public class ListOnDateCommand extends Command {
+    private final LocalDate date;
+
+    /**
+     * Creates a command that filters tasks by date.
+     *
+     * @param date the date to match
+     */
+    public ListOnDateCommand(LocalDate date) {
+        this.date = date;
+    }
+
+    /** Displays the tasks that occur on this command's date. */
+    @Override
+    public void execute(TaskList tasks, Ui ui, Storage storage) {
+        ui.showTasksOnDate(date, tasks.getTasksOccurringOn(date));
+    }
+}
