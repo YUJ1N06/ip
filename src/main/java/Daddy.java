@@ -52,8 +52,7 @@ public class Daddy {
         case UNMARK:
             return execute(parser.parseTaskStateCommand(commandType, arguments));
         case DELETE:
-            deleteTask(arguments);
-            return false;
+            return execute(parser.parseDeleteCommand(arguments));
         case MARK_MISSING_ARGUMENT:
             throw new DaddyException("MARK?! Mark what... Try: mark 1 (after adding a task first).");
         case UNMARK_MISSING_ARGUMENT:
@@ -77,29 +76,6 @@ public class Daddy {
     private static boolean execute(Command command) throws DaddyException {
         command.execute(tasks, ui, storage);
         return command.isExit();
-    }
-
-    private static void deleteTask(String taskNumber) throws DaddyException {
-        int taskIndex = getTaskIndex(taskNumber, "delete");
-        Task removedTask = tasks.removeTaskAt(taskIndex);
-        storage.save(tasks);
-        ui.showTaskDeleted(removedTask, tasks.size());
-    }
-
-    /**
-     * Resolves a user task number to a valid zero-based task index.
-     *
-     * @param taskNumber the task number entered by the user
-     * @param command the command that uses the task number
-     * @return the matching zero-based task index
-     * @throws DaddyException if the supplied task number is not numeric or is out of range
-     */
-    private static int getTaskIndex(String taskNumber, String command) throws DaddyException {
-        int taskIndex = parser.parseTaskIndex(taskNumber, command);
-        if (!tasks.hasTaskAt(taskIndex)) {
-            throw new DaddyException("That task number is out of range. Pick a number from 1 to " + tasks.size() + ".");
-        }
-        return taskIndex;
     }
 
     private static void loadTasks() {

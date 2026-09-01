@@ -143,6 +143,17 @@ public class Parser {
     }
 
     /**
+     * Creates a command that deletes one task.
+     *
+     * @param taskNumber the user-entered one-based task number
+     * @return a command that deletes the selected task
+     * @throws DaddyException if the task number is not numeric
+     */
+    public Command parseDeleteCommand(String taskNumber) throws DaddyException {
+        return new DeleteCommand(parseTaskIndex(taskNumber, "delete"));
+    }
+
+    /**
      * Creates a task from the details of a task-creation command.
      *
      * @param commandType the type of task to create
