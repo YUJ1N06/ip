@@ -1,11 +1,8 @@
 import java.nio.file.Path;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.Scanner;
 
 public class Daddy {
-    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd-MM-yyyy");
     private static final TaskList tasks = new TaskList();
     private static final Storage storage = new Storage(Path.of("data", "duke.txt"));
     private static final Ui ui = new Ui();
@@ -83,12 +80,8 @@ public class Daddy {
     }
 
     private static void listTasksOnDate(String dateText) throws DaddyException {
-        try {
-            LocalDate date = LocalDate.parse(dateText, DATE_FORMAT);
-            ui.showTasksOnDate(date, tasks.getTasksOccurringOn(date));
-        } catch (DateTimeParseException exception) {
-            throw new DaddyException("That date needs dd-MM-yyyy format. Try: list on 02-12-2019");
-        }
+        LocalDate date = parser.parseListDate(dateText);
+        ui.showTasksOnDate(date, tasks.getTasksOccurringOn(date));
     }
 
     /**
@@ -125,23 +118,19 @@ public class Daddy {
     }
 
     /**
-     * Converts a one-based task number into a valid zero-based task index.
+     * Resolves a user task number to a valid zero-based task index.
      *
      * @param taskNumber the task number entered by the user
      * @param command the command that uses the task number
      * @return the matching zero-based task index
-     * @throws DaddyException if the supplied task number is invalid
+     * @throws DaddyException if the supplied task number is not numeric or is out of range
      */
     private static int getTaskIndex(String taskNumber, String command) throws DaddyException {
-        try {
-            int taskIndex = Integer.parseInt(taskNumber) - 1;
-            if (!tasks.hasTaskAt(taskIndex)) {
-                throw new DaddyException("That task number is out of range. Pick a number from 1 to " + tasks.size() + ".");
-            }
-            return taskIndex;
-        } catch (NumberFormatException exception) {
-            throw new DaddyException("'" + taskNumber + "' is not a task number. Try " + command + " 1, for example.");
+        int taskIndex = parser.parseTaskIndex(taskNumber, command);
+        if (!tasks.hasTaskAt(taskIndex)) {
+            throw new DaddyException("That task number is out of range. Pick a number from 1 to " + tasks.size() + ".");
         }
+        return taskIndex;
     }
 
     private static void loadTasks() {

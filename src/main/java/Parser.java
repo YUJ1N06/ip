@@ -68,6 +68,37 @@ public class Parser {
     }
 
     /**
+     * Parses a date used by the {@code list on} command.
+     *
+     * @param dateText the user-entered date
+     * @return the parsed date
+     * @throws DaddyException if the date does not use {@code dd-MM-yyyy} format
+     */
+    public LocalDate parseListDate(String dateText) throws DaddyException {
+        try {
+            return LocalDate.parse(dateText, DATE_FORMAT);
+        } catch (DateTimeParseException exception) {
+            throw new DaddyException("That date needs dd-MM-yyyy format. Try: list on 02-12-2019");
+        }
+    }
+
+    /**
+     * Converts a one-based task number into a zero-based list index.
+     *
+     * @param taskNumber the task number entered by the user
+     * @param command the command that uses the task number
+     * @return the matching zero-based task index
+     * @throws DaddyException if the task number is not numeric
+     */
+    public int parseTaskIndex(String taskNumber, String command) throws DaddyException {
+        try {
+            return Integer.parseInt(taskNumber) - 1;
+        } catch (NumberFormatException exception) {
+            throw new DaddyException("'" + taskNumber + "' is not a task number. Try " + command + " 1, for example.");
+        }
+    }
+
+    /**
      * Creates a task from the details of a task-creation command.
      *
      * @param commandType the type of task to create
