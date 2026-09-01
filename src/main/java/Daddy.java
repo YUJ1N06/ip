@@ -1,6 +1,5 @@
 import java.nio.file.Path;
 import java.time.LocalDate;
-import java.util.Scanner;
 
 public class Daddy {
     private static final TaskList tasks = new TaskList();
@@ -15,10 +14,8 @@ public class Daddy {
     }
 
     private static void runChatLoop() {
-        Scanner scanner = new Scanner(System.in);
-
         while (true) {
-            String input = scanner.nextLine();
+            String input = ui.readCommand();
 
             try {
                 if (executeCommand(input)) {
@@ -29,7 +26,7 @@ public class Daddy {
             }
         }
 
-        scanner.close();
+        ui.close();
     }
 
     /**

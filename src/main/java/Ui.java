@@ -1,5 +1,6 @@
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Scanner;
 
 /**
  * Handles all console output shown to a Daddy user.
@@ -7,6 +8,26 @@ import java.util.List;
 public class Ui {
     private static final String INDENT = "    ";
     private static final String DIVIDER = "____________________________________________________________";
+    private final Scanner scanner;
+
+    /** Creates a user interface that reads commands from standard input. */
+    public Ui() {
+        this.scanner = new Scanner(System.in);
+    }
+
+    /**
+     * Reads the next command entered by the user.
+     *
+     * @return the complete command line
+     */
+    public String readCommand() {
+        return scanner.nextLine();
+    }
+
+    /** Releases the input stream used by this interface. */
+    public void close() {
+        scanner.close();
+    }
 
     /** Displays Daddy's greeting banner. */
     public void showGreeting() {
