@@ -99,6 +99,22 @@ public class Parser {
     }
 
     /**
+     * Creates a read-only list command from parsed command text.
+     *
+     * @param commandType the recognized list command type
+     * @param arguments the text following the command keyword
+     * @return a command that displays tasks
+     * @throws DaddyException if a list date is invalid
+     */
+    public Command parseListCommand(CommandType commandType, String arguments) throws DaddyException {
+        return switch (commandType) {
+        case LIST -> new ListCommand();
+        case LIST_ON -> new ListOnDateCommand(parseListDate(arguments));
+        default -> throw new IllegalArgumentException("command does not list tasks");
+        };
+    }
+
+    /**
      * Creates a task from the details of a task-creation command.
      *
      * @param commandType the type of task to create

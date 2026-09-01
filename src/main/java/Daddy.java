@@ -1,5 +1,4 @@
 import java.nio.file.Path;
-import java.time.LocalDate;
 
 public class Daddy {
     private static final TaskList tasks = new TaskList();
@@ -43,11 +42,8 @@ public class Daddy {
         case BYE:
             return execute(new ExitCommand());
         case LIST:
-            ui.showTaskList(tasks);
-            return false;
         case LIST_ON:
-            listTasksOnDate(arguments);
-            return false;
+            return execute(parser.parseListCommand(commandType, arguments));
         case TODO:
         case DEADLINE:
         case EVENT:
@@ -85,11 +81,6 @@ public class Daddy {
     private static boolean execute(Command command) throws DaddyException {
         command.execute(tasks, ui, storage);
         return command.isExit();
-    }
-
-    private static void listTasksOnDate(String dateText) throws DaddyException {
-        LocalDate date = parser.parseListDate(dateText);
-        ui.showTasksOnDate(date, tasks.getTasksOccurringOn(date));
     }
 
     /**
