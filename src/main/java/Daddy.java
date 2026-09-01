@@ -4,6 +4,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.Scanner;
 
 public class Daddy {
@@ -11,6 +16,8 @@ public class Daddy {
     private static final Path DATA_FILE = Path.of("data", "duke.txt");
     private static final Path BACKUP_FILE = Path.of("data", "duke.txt.backup");
     private static final Path CORRUPTED_FILE = Path.of("data", "duke.txt.corrupt");
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HHmm");
     private static final List<Task> tasks = new ArrayList<>();
 
     public static void main(String[] args) {
@@ -119,7 +126,12 @@ public class Daddy {
         if (deadline.isEmpty()) {
             throw new DaddyException("A deadline needs a /by date or time. Try: deadline return book /by Sunday");
         }
-        tasks.add(new Deadline(description, deadline));
+        try {
+            tasks.add(new Deadline(description, parseDateTime(deadline)));
+        } catch (DateTimeParseException exception) {
+            throw new DaddyException("That deadline date needs yyyy-MM-dd or yyyy-MM-dd HHmm format. "
+                    + "Try: deadline return book /by 2019-12-02 1800");
+        }
         saveTasks();
 
         System.out.println(INDENT + "____________________________________________________________");
@@ -145,7 +157,12 @@ public class Daddy {
         if (from.isEmpty() || to.isEmpty()) {
             throw new DaddyException("An event needs both /from and /to times. Try: event meeting /from Mon 2pm /to 4pm");
         }
-        tasks.add(new Event(description, from, to));
+        try {
+            tasks.add(new Event(description, parseDateTime(from), parseDateTime(to)));
+        } catch (DateTimeParseException exception) {
+            throw new DaddyException("Event times need yyyy-MM-dd or yyyy-MM-dd HHmm format. "
+                    + "Try: event meeting /from 2019-12-02 1400 /to 2019-12-02 1600");
+        }
         saveTasks();
 
         System.out.println(INDENT + "____________________________________________________________");
@@ -272,13 +289,13 @@ public class Daddy {
             if (fields.length != 4) {
                 throw new IllegalArgumentException("invalid deadline record");
             }
-            yield new Deadline(fields[2], fields[3]);
+            yield new Deadline(fields[2], parseDateTime(fields[3]));
         }
         case "E" -> {
             if (fields.length != 5) {
                 throw new IllegalArgumentException("invalid event record");
             }
-            yield new Event(fields[2], fields[3], fields[4]);
+            yield new Event(fields[2], parseDateTime(fields[3]), parseDateTime(fields[4]));
         }
         default -> throw new IllegalArgumentException("unknown task type");
         };
@@ -304,6 +321,14 @@ public class Daddy {
             Files.write(DATA_FILE, lines);
         } catch (IOException exception) {
             throw new DaddyException("Daddy couldn't save your tasks. Check that the data folder is writable.");
+        }
+    }
+
+    private static LocalDateTime parseDateTime(String value) {
+        try {
+            return LocalDateTime.parse(value, DATE_TIME_FORMAT);
+        } catch (DateTimeParseException exception) {
+            return LocalDate.parse(value, DATE_FORMAT).atTime(LocalTime.MIDNIGHT);
         }
     }
 

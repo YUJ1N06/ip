@@ -7,6 +7,21 @@ Compile the application first with Java 25:
 javac -d /tmp/daddy-classes src/main/java/*.java
 ```
 
+## Manual test: date and time parsing
+Aim: Verify that deadlines and events parse ISO dates/times and display friendly values.
+
+### Inputs
+
+```text
+deadline return book /by 2019-12-02 1800
+event project meeting /from 2019-12-02 1400 /to 2019-12-02 1600
+list
+bye
+```
+
+Expected display includes `Dec 2 2019 18:00` for the deadline and
+`Dec 2 2019 14:00` to `Dec 2 2019 16:00` for the event.
+
 ## Manual test: corrupted data recovery
 Aim: Verify that malformed records are reported and skipped while valid records still load.
 
