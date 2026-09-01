@@ -127,6 +127,22 @@ public class Parser {
     }
 
     /**
+     * Creates a command that changes the done status of one task.
+     *
+     * @param commandType the recognized task-status command type
+     * @param taskNumber the user-entered one-based task number
+     * @return a command that marks or unmarks the selected task
+     * @throws DaddyException if the task number is not numeric
+     */
+    public Command parseTaskStateCommand(CommandType commandType, String taskNumber) throws DaddyException {
+        return switch (commandType) {
+        case MARK -> new MarkCommand(parseTaskIndex(taskNumber, "mark"));
+        case UNMARK -> new UnmarkCommand(parseTaskIndex(taskNumber, "unmark"));
+        default -> throw new IllegalArgumentException("command does not change task status");
+        };
+    }
+
+    /**
      * Creates a task from the details of a task-creation command.
      *
      * @param commandType the type of task to create

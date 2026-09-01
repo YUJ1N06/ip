@@ -49,11 +49,8 @@ public class Daddy {
         case EVENT:
             return execute(parser.parseAddCommand(commandType, arguments));
         case MARK:
-            markTask(arguments);
-            return false;
         case UNMARK:
-            unmarkTask(arguments);
-            return false;
+            return execute(parser.parseTaskStateCommand(commandType, arguments));
         case DELETE:
             deleteTask(arguments);
             return false;
@@ -80,20 +77,6 @@ public class Daddy {
     private static boolean execute(Command command) throws DaddyException {
         command.execute(tasks, ui, storage);
         return command.isExit();
-    }
-
-    private static void markTask(String taskNumber) throws DaddyException {
-        int taskIndex = getTaskIndex(taskNumber, "mark");
-        Task task = tasks.markTaskAsDone(taskIndex);
-        storage.save(tasks);
-        ui.showTaskMarked(task);
-    }
-
-    private static void unmarkTask(String taskNumber) throws DaddyException {
-        int taskIndex = getTaskIndex(taskNumber, "unmark");
-        Task task = tasks.markTaskAsNotDone(taskIndex);
-        storage.save(tasks);
-        ui.showTaskUnmarked(task);
     }
 
     private static void deleteTask(String taskNumber) throws DaddyException {
