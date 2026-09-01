@@ -7,30 +7,16 @@ import java.time.format.DateTimeParseException;
 import java.util.Scanner;
 
 public class Daddy {
-    private static final String INDENT = "    ";
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd-MM-yyyy");
     private static final DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("dd-MM-yyyy HHmm");
     private static final TaskList tasks = new TaskList();
     private static final Storage storage = new Storage(Path.of("data", "duke.txt"));
+    private static final Ui ui = new Ui();
 
     public static void main(String[] args) {
-        printGreeting();
+        ui.showGreeting();
         loadTasks();
         runChatLoop();
-    }
-
-    private static void printGreeting() {
-        String banner = " ____                      _       _       \n"
-                + "|  _ \\   __ _   __| |   __| |  _   _ \n"
-                + "| | | | / _` | / _` |  / _` | | | | |\n"
-                + "| | | || (_| || (_| | | (_| | | |_| |\n"
-                + "| |_| | \\__,_| \\__,_|  \\__,_|  \\__, |\n"
-                + "|____/                          |___/ \n";
-        System.out.println(INDENT + "____________________________________________________________");
-        printIndentedBanner(banner);
-        System.out.println(INDENT + "Hello, little one.");
-        System.out.println(INDENT + "What can I assist you with today ;)?");
-        System.out.println(INDENT + "____________________________________________________________");
     }
 
     private static void runChatLoop() {
@@ -41,10 +27,10 @@ public class Daddy {
 
             try {
                 if (input.equalsIgnoreCase("bye")) {
-                    printExit();
+                    ui.showExit();
                     break;
                 } else if (input.equalsIgnoreCase("list")) {
-                    printList();
+                    ui.showTaskList(tasks);
                 } else if (input.toLowerCase().startsWith("list on ")) {
                     listTasksOnDate(input.substring(8).trim());
                 } else if (input.equalsIgnoreCase("todo") || input.toLowerCase().startsWith("todo ")) {
@@ -76,41 +62,17 @@ public class Daddy {
                             + "' means. Try todo, deadline, event, list, mark, unmark, delete, or bye.");
                 }
             } catch (DaddyException exception) {
-                printError(exception.getMessage());
+                ui.showError(exception.getMessage());
             }
         }
 
         scanner.close();
     }
 
-    private static void printList() {
-        System.out.println(INDENT + "____________________________________________________________");
-        System.out.println(INDENT + " Here are the tasks in your list:");
-        for (int i = 0; i < tasks.size(); i++) {
-            Task task = tasks.get(i);
-            System.out.println(INDENT + " " + (i + 1) + "." + task.getTypeIcon()
-                    + "[" + task.getStatusIcon() + "] " + task.getDisplayDescription());
-        }
-        System.out.println(INDENT + "____________________________________________________________");
-    }
-
     private static void listTasksOnDate(String dateText) throws DaddyException {
         try {
             LocalDate date = LocalDate.parse(dateText, DATE_FORMAT);
-            System.out.println(INDENT + "____________________________________________________________");
-            System.out.println(INDENT + " Tasks occurring on " + date + ":");
-            int displayedTaskNumber = 1;
-            for (Task task : tasks) {
-                if (task.occursOn(date)) {
-                    System.out.println(INDENT + " " + displayedTaskNumber + "." + task.getTypeIcon()
-                            + "[" + task.getStatusIcon() + "] " + task.getDisplayDescription());
-                    displayedTaskNumber++;
-                }
-            }
-            if (displayedTaskNumber == 1) {
-                System.out.println(INDENT + " No deadlines or events found for that date.");
-            }
-            System.out.println(INDENT + "____________________________________________________________");
+            ui.showTasksOnDate(date, tasks);
         } catch (DateTimeParseException exception) {
             throw new DaddyException("That date needs dd-MM-yyyy format. Try: list on 02-12-2019");
         }
@@ -121,15 +83,10 @@ public class Daddy {
             throw new DaddyException("Hmm, what are you thinking of doing today? You need a description "
                     + "for that. Try: todo borrow book.");
         }
-        tasks.add(new Todo(description));
+        Task task = new Todo(description);
+        tasks.add(task);
         storage.save(tasks);
-
-        System.out.println(INDENT + "____________________________________________________________");
-        System.out.println(INDENT + " Got it. I've added this task:");
-        System.out.println(INDENT + "   " + tasks.get(tasks.size() - 1).getTypeIcon() + "["
-                + tasks.get(tasks.size() - 1).getStatusIcon() + "] " + description);
-        System.out.println(INDENT + " Now you have " + tasks.size() + " tasks in the list.");
-        System.out.println(INDENT + "____________________________________________________________");
+        ui.showTaskAdded(task, tasks.size());
     }
 
     private static void addDeadline(String taskDetails) throws DaddyException {
@@ -144,20 +101,14 @@ public class Daddy {
             throw new DaddyException("A deadline needs a /by date or time. Try: deadline return book /by Sunday");
         }
         try {
-            tasks.add(new Deadline(description, parseDateTime(deadline)));
+            Task task = new Deadline(description, parseDateTime(deadline));
+            tasks.add(task);
+            storage.save(tasks);
+            ui.showTaskAdded(task, tasks.size());
         } catch (DateTimeParseException exception) {
             throw new DaddyException("That deadline date needs dd-MM-yyyy or dd-MM-yyyy HHmm format. "
                     + "Try: deadline return book /by 02-12-2019 1800");
         }
-        storage.save(tasks);
-
-        System.out.println(INDENT + "____________________________________________________________");
-        System.out.println(INDENT + " Got it. I've added this task:");
-        System.out.println(INDENT + "   " + tasks.get(tasks.size() - 1).getTypeIcon() + "["
-                + tasks.get(tasks.size() - 1).getStatusIcon() + "] "
-                + tasks.get(tasks.size() - 1).getDisplayDescription());
-        System.out.println(INDENT + " Now you have " + tasks.size() + " tasks in the list.");
-        System.out.println(INDENT + "____________________________________________________________");
     }
 
     private static void addEvent(String taskDetails) throws DaddyException {
@@ -175,20 +126,14 @@ public class Daddy {
             throw new DaddyException("An event needs both /from and /to times. Try: event meeting /from Mon 2pm /to 4pm");
         }
         try {
-            tasks.add(new Event(description, parseDateTime(from), parseDateTime(to)));
+            Task task = new Event(description, parseDateTime(from), parseDateTime(to));
+            tasks.add(task);
+            storage.save(tasks);
+            ui.showTaskAdded(task, tasks.size());
         } catch (DateTimeParseException exception) {
             throw new DaddyException("Event times need dd-MM-yyyy or dd-MM-yyyy HHmm format. "
                     + "Try: event meeting /from 02-12-2019 1400 /to 02-12-2019 1600");
         }
-        storage.save(tasks);
-
-        System.out.println(INDENT + "____________________________________________________________");
-        System.out.println(INDENT + " Got it. I've added this task:");
-        System.out.println(INDENT + "   " + tasks.get(tasks.size() - 1).getTypeIcon() + "["
-                + tasks.get(tasks.size() - 1).getStatusIcon() + "] "
-                + tasks.get(tasks.size() - 1).getDisplayDescription());
-        System.out.println(INDENT + " Now you have " + tasks.size() + " tasks in the list.");
-        System.out.println(INDENT + "____________________________________________________________");
     }
 
     private static void markTask(String taskNumber) throws DaddyException {
@@ -198,12 +143,10 @@ public class Daddy {
                 throw new DaddyException("That task number is out of range. Pick a number from 1 to " + tasks.size() + ".");
             }
 
-            tasks.get(taskIndex).markAsDone();
+            Task task = tasks.get(taskIndex);
+            task.markAsDone();
             storage.save(tasks);
-            System.out.println(INDENT + "____________________________________________________________");
-            System.out.println(INDENT + " Nice! I've marked this task as done:");
-            System.out.println(INDENT + "   [X] " + tasks.get(taskIndex).getDisplayDescription());
-            System.out.println(INDENT + "____________________________________________________________");
+            ui.showTaskMarked(task);
         } catch (NumberFormatException exception) {
             throw new DaddyException("'" + taskNumber + "' is not a task number. Try mark 1, for example.");
         }
@@ -216,12 +159,10 @@ public class Daddy {
                 throw new DaddyException("That task number is out of range. Pick a number from 1 to " + tasks.size() + ".");
             }
 
-            tasks.get(taskIndex).markAsNotDone();
+            Task task = tasks.get(taskIndex);
+            task.markAsNotDone();
             storage.save(tasks);
-            System.out.println(INDENT + "____________________________________________________________");
-            System.out.println(INDENT + " OK, I've marked this task as not done yet:");
-            System.out.println(INDENT + "   [ ] " + tasks.get(taskIndex).getDisplayDescription());
-            System.out.println(INDENT + "____________________________________________________________");
+            ui.showTaskUnmarked(task);
         } catch (NumberFormatException exception) {
             throw new DaddyException("'" + taskNumber + "' is not a task number. Try unmark 1, for example.");
         }
@@ -236,26 +177,15 @@ public class Daddy {
 
             Task removedTask = tasks.remove(taskIndex);
             storage.save(tasks);
-            System.out.println(INDENT + "____________________________________________________________");
-            System.out.println(INDENT + " Noted. I've removed this task:");
-            System.out.println(INDENT + "   " + removedTask.getTypeIcon() + "[" + removedTask.getStatusIcon()
-                    + "] " + removedTask.getDisplayDescription());
-            System.out.println(INDENT + " Now you have " + tasks.size() + " tasks in the list.");
-            System.out.println(INDENT + "____________________________________________________________");
+            ui.showTaskDeleted(removedTask, tasks.size());
         } catch (NumberFormatException exception) {
             throw new DaddyException("'" + taskNumber + "' is not a task number. Try delete 1, for example.");
         }
     }
 
-    private static void printError(String message) {
-        System.out.println(INDENT + "____________________________________________________________");
-        System.out.println(INDENT + " " + message);
-        System.out.println(INDENT + "____________________________________________________________");
-    }
-
     private static void loadTasks() {
         for (String message : storage.loadInto(tasks)) {
-            printError(message);
+            ui.showError(message);
         }
     }
 
@@ -267,14 +197,4 @@ public class Daddy {
         }
     }
 
-    private static void printExit() {
-        System.out.println(INDENT + "Bye. See you soon :)");
-        System.out.println(INDENT + "____________________________________________________________");
-    }
-
-    private static void printIndentedBanner(String banner) {
-        for (String line : banner.split("\n")) {
-            System.out.println(INDENT + line);
-        }
-    }
 }
