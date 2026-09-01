@@ -1,12 +1,17 @@
 import java.util.ArrayList;
 import java.util.List;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Scanner;
 
 public class Daddy {
     private static final String INDENT = "    ";
+    private static final Path DATA_FILE = Path.of("data", "duke.txt");
     private static final List<Task> tasks = new ArrayList<>();
 
     public static void main(String[] args) {
+        loadTasks();
         printGreeting();
         runChatLoop();
     }
@@ -90,6 +95,7 @@ public class Daddy {
                     + "for that. Try: todo borrow book.");
         }
         tasks.add(new Todo(description));
+        saveTasks();
 
         System.out.println(INDENT + "____________________________________________________________");
         System.out.println(INDENT + " Got it. I've added this task:");
@@ -111,6 +117,7 @@ public class Daddy {
             throw new DaddyException("A deadline needs a /by date or time. Try: deadline return book /by Sunday");
         }
         tasks.add(new Deadline(description, deadline));
+        saveTasks();
 
         System.out.println(INDENT + "____________________________________________________________");
         System.out.println(INDENT + " Got it. I've added this task:");
@@ -136,6 +143,7 @@ public class Daddy {
             throw new DaddyException("An event needs both /from and /to times. Try: event meeting /from Mon 2pm /to 4pm");
         }
         tasks.add(new Event(description, from, to));
+        saveTasks();
 
         System.out.println(INDENT + "____________________________________________________________");
         System.out.println(INDENT + " Got it. I've added this task:");
@@ -154,6 +162,7 @@ public class Daddy {
             }
 
             tasks.get(taskIndex).markAsDone();
+            saveTasks();
             System.out.println(INDENT + "____________________________________________________________");
             System.out.println(INDENT + " Nice! I've marked this task as done:");
             System.out.println(INDENT + "   [X] " + tasks.get(taskIndex).getDisplayDescription());
@@ -171,6 +180,7 @@ public class Daddy {
             }
 
             tasks.get(taskIndex).markAsNotDone();
+            saveTasks();
             System.out.println(INDENT + "____________________________________________________________");
             System.out.println(INDENT + " OK, I've marked this task as not done yet:");
             System.out.println(INDENT + "   [ ] " + tasks.get(taskIndex).getDisplayDescription());
@@ -188,6 +198,7 @@ public class Daddy {
             }
 
             Task removedTask = tasks.remove(taskIndex);
+            saveTasks();
             System.out.println(INDENT + "____________________________________________________________");
             System.out.println(INDENT + " Noted. I've removed this task:");
             System.out.println(INDENT + "   " + removedTask.getTypeIcon() + "[" + removedTask.getStatusIcon()
@@ -203,6 +214,65 @@ public class Daddy {
         System.out.println(INDENT + "____________________________________________________________");
         System.out.println(INDENT + " " + message);
         System.out.println(INDENT + "____________________________________________________________");
+    }
+
+    private static void loadTasks() {
+        if (!Files.exists(DATA_FILE)) {
+            return;
+        }
+
+        try {
+            for (String line : Files.readAllLines(DATA_FILE)) {
+                if (line.isBlank()) {
+                    continue;
+                }
+                String[] fields = line.split("\\|", -1);
+                if (fields.length < 3) {
+                    continue;
+                }
+                Task task = createTask(fields);
+                if (task != null && "1".equals(fields[1])) {
+                    task.markAsDone();
+                }
+                if (task != null) {
+                    tasks.add(task);
+                }
+            }
+        } catch (IOException | RuntimeException exception) {
+            printError("Daddy couldn't load the task list. Check data/duke.txt and try again.");
+        }
+    }
+
+    private static Task createTask(String[] fields) {
+        return switch (fields[0]) {
+        case "T" -> new Todo(fields[2]);
+        case "D" -> fields.length >= 4 ? new Deadline(fields[2], fields[3]) : null;
+        case "E" -> fields.length >= 5 ? new Event(fields[2], fields[3], fields[4]) : null;
+        default -> null;
+        };
+    }
+
+    private static void saveTasks() throws DaddyException {
+        try {
+            Files.createDirectories(DATA_FILE.getParent());
+            List<String> lines = new ArrayList<>();
+            for (Task task : tasks) {
+                String description = task.getDescription().replace("|", " ");
+                String status = task.getStatusIcon().equals("X") ? "1" : "0";
+                String line = switch (task.getType()) {
+                case TODO -> "T|" + status + "|" + description;
+                case DEADLINE -> "D|" + status + "|" + description
+                        + "|" + ((Deadline) task).getDeadline();
+                case EVENT -> "E|" + status + "|" + description
+                        + "|" + ((Event) task).getFrom() + "|" + ((Event) task).getTo();
+                case GENERAL -> "T|" + status + "|" + description;
+                };
+                lines.add(line);
+            }
+            Files.write(DATA_FILE, lines);
+        } catch (IOException exception) {
+            throw new DaddyException("Daddy couldn't save your tasks. Check that the data folder is writable.");
+        }
     }
 
     private static void printExit() {

@@ -13,4 +13,9 @@ public class Deadline extends Task {
     public String getDisplayDescription() {
         return getDescription() + " (by: " + deadline + ")";
     }
+
+    /** Returns the deadline value for persistence. */
+    public String getDeadline() {
+        return deadline;
+    }
 }

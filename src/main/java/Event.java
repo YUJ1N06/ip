@@ -15,4 +15,14 @@ public class Event extends Task {
     public String getDisplayDescription() {
         return getDescription() + " (from: " + from + " to: " + to + ")";
     }
+
+    /** Returns the event start value for persistence. */
+    public String getFrom() {
+        return from;
+    }
+
+    /** Returns the event end value for persistence. */
+    public String getTo() {
+        return to;
+    }
 }
