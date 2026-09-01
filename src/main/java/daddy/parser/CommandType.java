@@ -1,3 +1,5 @@
+package daddy.parser;
+
 /**
  * Identifies the commands that Daddy understands.
  */

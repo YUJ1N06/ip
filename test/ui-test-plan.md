@@ -4,7 +4,7 @@ The test runner compares stdout exactly, after normalizing CRLF line endings.
 Compile the application first with Java 25:
 
 ```bash
-javac -d /tmp/daddy-classes src/main/java/*.java
+javac -d /tmp/daddy-classes $(find src/main/java -name '*.java')
 ```
 
 ## Manual test: date and time parsing
@@ -68,7 +68,7 @@ Start the app again and enter `list`. The list should contain
 Aim: Verify that deleting a valid task removes it and that the remaining tasks are renumbered.
 
 ### Command
-java -cp /tmp/daddy-classes Daddy
+java -cp /tmp/daddy-classes daddy.Daddy
 
 ### Input
 todo keep me
@@ -116,7 +116,7 @@ bye
 Aim: Verify that malformed commands report specific corrections and do not add invalid tasks or alter the valid task list.
 
 ### Command
-java -cp /tmp/daddy-classes Daddy
+java -cp /tmp/daddy-classes daddy.Daddy
 
 ### Input
 todo buy milk
@@ -189,7 +189,7 @@ bye
 Aim: Verify that a todo can be created, marked done, reversed, and displayed with the correct status.
 
 ### Command
-java -cp /tmp/daddy-classes Daddy
+java -cp /tmp/daddy-classes daddy.Daddy
 
 ### Input
 todo read book

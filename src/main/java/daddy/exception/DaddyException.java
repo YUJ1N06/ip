@@ -1,3 +1,5 @@
+package daddy.exception;
+
 /**
  * Represents an error that can be explained directly to a Daddy user.
  */

@@ -1,3 +1,11 @@
+package daddy.command;
+
+import daddy.exception.DaddyException;
+import daddy.storage.Storage;
+import daddy.task.Task;
+import daddy.task.TaskList;
+import daddy.ui.Ui;
+
 /**
  * Adds one task to the task list.
  */

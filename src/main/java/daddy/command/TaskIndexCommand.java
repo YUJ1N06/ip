@@ -1,3 +1,8 @@
+package daddy.command;
+
+import daddy.exception.DaddyException;
+import daddy.task.TaskList;
+
 /**
  * Provides shared task-index validation for commands that act on one task.
  */

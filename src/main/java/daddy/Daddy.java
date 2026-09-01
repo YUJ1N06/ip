@@ -1,4 +1,13 @@
+package daddy;
+
 import java.nio.file.Path;
+
+import daddy.command.Command;
+import daddy.exception.DaddyException;
+import daddy.parser.Parser;
+import daddy.storage.Storage;
+import daddy.task.TaskList;
+import daddy.ui.Ui;
 
 public class Daddy {
     private static final TaskList tasks = new TaskList();

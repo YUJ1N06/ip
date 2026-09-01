@@ -1,3 +1,9 @@
+package daddy.command;
+
+import daddy.storage.Storage;
+import daddy.task.TaskList;
+import daddy.ui.Ui;
+
 /**
  * Ends the Daddy chat session.
  */

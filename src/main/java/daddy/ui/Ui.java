@@ -1,6 +1,11 @@
+package daddy.ui;
+
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Scanner;
+
+import daddy.task.Task;
+import daddy.task.TaskList;
 
 /**
  * Handles all console output shown to a Daddy user.

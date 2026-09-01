@@ -1,3 +1,5 @@
+package daddy.task;
+
 /** Identifies the kind of task and its display marker. */
 public enum TaskType {
     TODO("[T]"),
