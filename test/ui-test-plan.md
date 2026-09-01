@@ -21,7 +21,9 @@ E|x|bad
 
 Start the app and enter `list`. The console should report corrupted lines 2 and 4,
 while listing `keep me` as done and `return book` as not done. The app should
-remain usable and accept `bye` normally.
+remain usable and accept `bye` normally. It should also create
+`data/duke.txt.backup` containing the original file and
+`data/duke.txt.corrupt` containing the rejected records with line numbers.
 
 ## Test case: delete removes and renumbers tasks
 Aim: Verify that deleting a valid task removes it and that the remaining tasks are renumbered.

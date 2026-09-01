@@ -3,11 +3,14 @@ import java.util.List;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.Scanner;
 
 public class Daddy {
     private static final String INDENT = "    ";
     private static final Path DATA_FILE = Path.of("data", "duke.txt");
+    private static final Path BACKUP_FILE = Path.of("data", "duke.txt.backup");
+    private static final Path CORRUPTED_FILE = Path.of("data", "duke.txt.corrupt");
     private static final List<Task> tasks = new ArrayList<>();
 
     public static void main(String[] args) {
@@ -223,6 +226,7 @@ public class Daddy {
 
         try {
             List<String> lines = Files.readAllLines(DATA_FILE);
+            List<String> corruptedLines = new ArrayList<>();
             for (int lineNumber = 0; lineNumber < lines.size(); lineNumber++) {
                 String line = lines.get(lineNumber);
                 if (line.isBlank()) {
@@ -236,10 +240,17 @@ public class Daddy {
                     }
                     tasks.add(task);
                 } catch (IllegalArgumentException | ArrayIndexOutOfBoundsException exception) {
+                    corruptedLines.add("line " + (lineNumber + 1) + ": " + line);
                     printError("Daddy skipped corrupted data on line " + (lineNumber + 1)
                             + ". Expected T|0|description, D|0|description|date, or "
                             + "E|0|description|from|to.");
                 }
+            }
+            if (!corruptedLines.isEmpty()) {
+                Files.copy(DATA_FILE, BACKUP_FILE, StandardCopyOption.REPLACE_EXISTING);
+                Files.write(CORRUPTED_FILE, corruptedLines);
+                printError("Daddy saved the original file as data/duke.txt.backup and "
+                        + "the bad records as data/duke.txt.corrupt so you can fix them.");
             }
         } catch (IOException | RuntimeException exception) {
             printError("Daddy couldn't load the task list. Check data/duke.txt and try again.");
