@@ -7,6 +7,22 @@ Compile the application first with Java 25:
 javac -d /tmp/daddy-classes src/main/java/*.java
 ```
 
+## Manual test: corrupted data recovery
+Aim: Verify that malformed records are reported and skipped while valid records still load.
+
+Before starting the app, place these lines in `data/duke.txt`:
+
+```text
+T|1|keep me
+BROKEN
+D|0|return book|Sunday
+E|x|bad
+```
+
+Start the app and enter `list`. The console should report corrupted lines 2 and 4,
+while listing `keep me` as done and `return book` as not done. The app should
+remain usable and accept `bye` normally.
+
 ## Test case: delete removes and renumbers tasks
 Aim: Verify that deleting a valid task removes it and that the remaining tasks are renumbered.
 

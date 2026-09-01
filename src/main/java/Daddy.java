@@ -11,8 +11,8 @@ public class Daddy {
     private static final List<Task> tasks = new ArrayList<>();
 
     public static void main(String[] args) {
-        loadTasks();
         printGreeting();
+        loadTasks();
         runChatLoop();
     }
 
@@ -222,20 +222,23 @@ public class Daddy {
         }
 
         try {
-            for (String line : Files.readAllLines(DATA_FILE)) {
+            List<String> lines = Files.readAllLines(DATA_FILE);
+            for (int lineNumber = 0; lineNumber < lines.size(); lineNumber++) {
+                String line = lines.get(lineNumber);
                 if (line.isBlank()) {
                     continue;
                 }
-                String[] fields = line.split("\\|", -1);
-                if (fields.length < 3) {
-                    continue;
-                }
-                Task task = createTask(fields);
-                if (task != null && "1".equals(fields[1])) {
-                    task.markAsDone();
-                }
-                if (task != null) {
+                try {
+                    String[] fields = line.split("\\|", -1);
+                    Task task = createTask(fields);
+                    if ("1".equals(fields[1])) {
+                        task.markAsDone();
+                    }
                     tasks.add(task);
+                } catch (IllegalArgumentException | ArrayIndexOutOfBoundsException exception) {
+                    printError("Daddy skipped corrupted data on line " + (lineNumber + 1)
+                            + ". Expected T|0|description, D|0|description|date, or "
+                            + "E|0|description|from|to.");
                 }
             }
         } catch (IOException | RuntimeException exception) {
@@ -244,11 +247,29 @@ public class Daddy {
     }
 
     private static Task createTask(String[] fields) {
+        if (fields.length < 3 || !(fields[1].equals("0") || fields[1].equals("1"))) {
+            throw new IllegalArgumentException("invalid task record");
+        }
         return switch (fields[0]) {
-        case "T" -> new Todo(fields[2]);
-        case "D" -> fields.length >= 4 ? new Deadline(fields[2], fields[3]) : null;
-        case "E" -> fields.length >= 5 ? new Event(fields[2], fields[3], fields[4]) : null;
-        default -> null;
+        case "T" -> {
+            if (fields.length != 3) {
+                throw new IllegalArgumentException("invalid todo record");
+            }
+            yield new Todo(fields[2]);
+        }
+        case "D" -> {
+            if (fields.length != 4) {
+                throw new IllegalArgumentException("invalid deadline record");
+            }
+            yield new Deadline(fields[2], fields[3]);
+        }
+        case "E" -> {
+            if (fields.length != 5) {
+                throw new IllegalArgumentException("invalid event record");
+            }
+            yield new Event(fields[2], fields[3], fields[4]);
+        }
+        default -> throw new IllegalArgumentException("unknown task type");
         };
     }
 
