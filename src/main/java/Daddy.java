@@ -12,6 +12,7 @@ public class Daddy {
     private static final TaskList tasks = new TaskList();
     private static final Storage storage = new Storage(Path.of("data", "duke.txt"));
     private static final Ui ui = new Ui();
+    private static final Parser parser = new Parser();
 
     public static void main(String[] args) {
         ui.showGreeting();
@@ -26,40 +27,8 @@ public class Daddy {
             String input = scanner.nextLine();
 
             try {
-                if (input.equalsIgnoreCase("bye")) {
-                    ui.showExit();
+                if (executeCommand(input)) {
                     break;
-                } else if (input.equalsIgnoreCase("list")) {
-                    ui.showTaskList(tasks);
-                } else if (input.toLowerCase().startsWith("list on ")) {
-                    listTasksOnDate(input.substring(8).trim());
-                } else if (input.equalsIgnoreCase("todo") || input.toLowerCase().startsWith("todo ")) {
-                    addTodo(input.length() == 4 ? "" : input.substring(5).trim());
-                } else if (input.equalsIgnoreCase("mark")) {
-                    throw new DaddyException("MARK?! Mark what... Try: mark 1 (after adding a task first).");
-                } else if (input.equalsIgnoreCase("unmark")) {
-                    throw new DaddyException("UNMARK?! Unmark what... Try: unmark 1 (after adding a task first).");
-                } else if (input.equalsIgnoreCase("deadline")) {
-                    throw new DaddyException("What deadlines are coming up? Better hurry, add them and get them "
-                            + "done ASAP. Try: deadline return book /by Sunday.");
-                } else if (input.equalsIgnoreCase("event")) {
-                    throw new DaddyException("What exciting event are you planning? Give it a name so Daddy can "
-                            + "keep track. Try: event meeting /from Mon 2pm /to 4pm.");
-                } else if (input.equalsIgnoreCase("delete")) {
-                    throw new DaddyException("DELETE?! Delete what... Try: delete 1 (choose a task number first).");
-                } else if (input.toLowerCase().startsWith("deadline ")) {
-                    addDeadline(input.substring(9).trim());
-                } else if (input.toLowerCase().startsWith("event ")) {
-                    addEvent(input.substring(6).trim());
-                } else if (input.toLowerCase().startsWith("unmark ")) {
-                    unmarkTask(input.substring(7).trim());
-                } else if (input.toLowerCase().startsWith("delete ")) {
-                    deleteTask(input.substring(7).trim());
-                } else if (input.toLowerCase().startsWith("mark ")) {
-                    markTask(input.substring(5).trim());
-                } else {
-                    throw new DaddyException("Daddy has no clue what '" + input
-                            + "' means. Try todo, deadline, event, list, mark, unmark, delete, or bye.");
                 }
             } catch (DaddyException exception) {
                 ui.showError(exception.getMessage());
@@ -67,6 +36,57 @@ public class Daddy {
         }
 
         scanner.close();
+    }
+
+    /**
+     * Executes one recognized command.
+     *
+     * @param input the complete command entered by the user
+     * @return whether the command ends the chat session
+     * @throws DaddyException if the command is invalid or cannot be completed
+     */
+    private static boolean executeCommand(String input) throws DaddyException {
+        CommandType commandType = parser.parse(input);
+        String arguments = parser.getArguments(input, commandType);
+        switch (commandType) {
+        case BYE:
+            ui.showExit();
+            return true;
+        case LIST:
+            ui.showTaskList(tasks);
+            return false;
+        case LIST_ON:
+            listTasksOnDate(arguments);
+            return false;
+        case TODO:
+            addTodo(arguments);
+            return false;
+        case DEADLINE:
+            addDeadline(arguments);
+            return false;
+        case EVENT:
+            addEvent(arguments);
+            return false;
+        case MARK:
+            markTask(arguments);
+            return false;
+        case UNMARK:
+            unmarkTask(arguments);
+            return false;
+        case DELETE:
+            deleteTask(arguments);
+            return false;
+        case MARK_MISSING_ARGUMENT:
+            throw new DaddyException("MARK?! Mark what... Try: mark 1 (after adding a task first).");
+        case UNMARK_MISSING_ARGUMENT:
+            throw new DaddyException("UNMARK?! Unmark what... Try: unmark 1 (after adding a task first).");
+        case DELETE_MISSING_ARGUMENT:
+            throw new DaddyException("DELETE?! Delete what... Try: delete 1 (choose a task number first).");
+        case UNKNOWN:
+            throw new DaddyException("Daddy has no clue what '" + input
+                    + "' means. Try todo, deadline, event, list, mark, unmark, delete, or bye.");
+        }
+        throw new IllegalStateException("Unhandled command type: " + commandType);
     }
 
     private static void listTasksOnDate(String dateText) throws DaddyException {
