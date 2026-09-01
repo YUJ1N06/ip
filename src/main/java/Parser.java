@@ -115,6 +115,18 @@ public class Parser {
     }
 
     /**
+     * Creates an add command from a task-creation command.
+     *
+     * @param commandType the recognized task-creation command type
+     * @param taskDetails the task description and date details, when applicable
+     * @return a command that adds the parsed task
+     * @throws DaddyException if the task details are incomplete or incorrectly formatted
+     */
+    public Command parseAddCommand(CommandType commandType, String taskDetails) throws DaddyException {
+        return new AddCommand(parseTask(commandType, taskDetails));
+    }
+
+    /**
      * Creates a task from the details of a task-creation command.
      *
      * @param commandType the type of task to create

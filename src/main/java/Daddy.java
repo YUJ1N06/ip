@@ -47,8 +47,7 @@ public class Daddy {
         case TODO:
         case DEADLINE:
         case EVENT:
-            addTask(parser.parseTask(commandType, arguments));
-            return false;
+            return execute(parser.parseAddCommand(commandType, arguments));
         case MARK:
             markTask(arguments);
             return false;
@@ -81,18 +80,6 @@ public class Daddy {
     private static boolean execute(Command command) throws DaddyException {
         command.execute(tasks, ui, storage);
         return command.isExit();
-    }
-
-    /**
-     * Adds a parsed task, persists the list, and displays the confirmation.
-     *
-     * @param task the task to add
-     * @throws DaddyException if the updated task list cannot be saved
-     */
-    private static void addTask(Task task) throws DaddyException {
-        tasks.add(task);
-        storage.save(tasks);
-        ui.showTaskAdded(task, tasks.size());
     }
 
     private static void markTask(String taskNumber) throws DaddyException {
