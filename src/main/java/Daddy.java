@@ -1,14 +1,11 @@
 import java.nio.file.Path;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Scanner;
 
 public class Daddy {
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd-MM-yyyy");
-    private static final DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("dd-MM-yyyy HHmm");
     private static final TaskList tasks = new TaskList();
     private static final Storage storage = new Storage(Path.of("data", "duke.txt"));
     private static final Ui ui = new Ui();
@@ -59,13 +56,9 @@ public class Daddy {
             listTasksOnDate(arguments);
             return false;
         case TODO:
-            addTodo(arguments);
-            return false;
         case DEADLINE:
-            addDeadline(arguments);
-            return false;
         case EVENT:
-            addEvent(arguments);
+            addTask(parser.parseTask(commandType, arguments));
             return false;
         case MARK:
             markTask(arguments);
@@ -98,62 +91,16 @@ public class Daddy {
         }
     }
 
-    private static void addTodo(String description) throws DaddyException {
-        if (description.isEmpty()) {
-            throw new DaddyException("Hmm, what are you thinking of doing today? You need a description "
-                    + "for that. Try: todo borrow book.");
-        }
-        Task task = new Todo(description);
+    /**
+     * Adds a parsed task, persists the list, and displays the confirmation.
+     *
+     * @param task the task to add
+     * @throws DaddyException if the updated task list cannot be saved
+     */
+    private static void addTask(Task task) throws DaddyException {
         tasks.add(task);
         storage.save(tasks);
         ui.showTaskAdded(task, tasks.size());
-    }
-
-    private static void addDeadline(String taskDetails) throws DaddyException {
-        int byIndex = taskDetails.indexOf(" /by ");
-        String description = byIndex >= 0 ? taskDetails.substring(0, byIndex).trim() : taskDetails;
-        String deadline = byIndex >= 0 ? taskDetails.substring(byIndex + 5).trim() : "";
-        if (description.isEmpty()) {
-            throw new DaddyException("What deadlines are coming up? Better hurry, add them and get them "
-                    + "done ASAP. Try: deadline return book /by Sunday.");
-        }
-        if (deadline.isEmpty()) {
-            throw new DaddyException("A deadline needs a /by date or time. Try: deadline return book /by Sunday");
-        }
-        try {
-            Task task = new Deadline(description, parseDateTime(deadline));
-            tasks.add(task);
-            storage.save(tasks);
-            ui.showTaskAdded(task, tasks.size());
-        } catch (DateTimeParseException exception) {
-            throw new DaddyException("That deadline date needs dd-MM-yyyy or dd-MM-yyyy HHmm format. "
-                    + "Try: deadline return book /by 02-12-2019 1800");
-        }
-    }
-
-    private static void addEvent(String taskDetails) throws DaddyException {
-        int fromIndex = taskDetails.indexOf(" /from ");
-        int toIndex = taskDetails.indexOf(" /to ");
-        String description = fromIndex >= 0 ? taskDetails.substring(0, fromIndex).trim() : taskDetails;
-        String from = fromIndex >= 0 && toIndex > fromIndex
-                ? taskDetails.substring(fromIndex + 7, toIndex).trim() : "";
-        String to = toIndex >= 0 ? taskDetails.substring(toIndex + 5).trim() : "";
-        if (description.isEmpty()) {
-            throw new DaddyException("What exciting event are you planning? Give it a name so Daddy can "
-                    + "keep track. Try: event meeting /from Mon 2pm /to 4pm.");
-        }
-        if (from.isEmpty() || to.isEmpty()) {
-            throw new DaddyException("An event needs both /from and /to times. Try: event meeting /from Mon 2pm /to 4pm");
-        }
-        try {
-            Task task = new Event(description, parseDateTime(from), parseDateTime(to));
-            tasks.add(task);
-            storage.save(tasks);
-            ui.showTaskAdded(task, tasks.size());
-        } catch (DateTimeParseException exception) {
-            throw new DaddyException("Event times need dd-MM-yyyy or dd-MM-yyyy HHmm format. "
-                    + "Try: event meeting /from 02-12-2019 1400 /to 02-12-2019 1600");
-        }
     }
 
     private static void markTask(String taskNumber) throws DaddyException {
@@ -200,14 +147,6 @@ public class Daddy {
     private static void loadTasks() {
         for (String message : storage.loadInto(tasks)) {
             ui.showError(message);
-        }
-    }
-
-    private static LocalDateTime parseDateTime(String value) {
-        try {
-            return LocalDateTime.parse(value, DATE_TIME_FORMAT);
-        } catch (DateTimeParseException exception) {
-            return LocalDate.parse(value, DATE_FORMAT).atTime(LocalTime.MIDNIGHT);
         }
     }
 
