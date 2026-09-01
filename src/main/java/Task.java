@@ -1,3 +1,5 @@
+import java.time.LocalDate;
+
 /**
  * Represents one task in the task list.
  */
@@ -71,5 +73,10 @@ public class Task {
     /** Returns this task's type for persistence. */
     public TaskType getType() {
         return type;
+    }
+
+    /** Returns whether this task occurs on the supplied date. */
+    public boolean occursOn(LocalDate date) {
+        return false;
     }
 }

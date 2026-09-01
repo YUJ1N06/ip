@@ -1,4 +1,5 @@
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 /** Represents a task with a specified start and end date or time. */
@@ -29,5 +30,11 @@ public class Event extends Task {
     /** Returns the event end value for persistence. */
     public LocalDateTime getTo() {
         return to;
+    }
+
+    /** Returns whether this event starts or ends on the supplied date. */
+    @Override
+    public boolean occursOn(LocalDate date) {
+        return from.toLocalDate().equals(date) || to.toLocalDate().equals(date);
     }
 }

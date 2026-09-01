@@ -1,4 +1,5 @@
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 /** Represents a task that must be completed by a specified date or time. */
@@ -21,5 +22,11 @@ public class Deadline extends Task {
     /** Returns the deadline value for persistence. */
     public LocalDateTime getDeadline() {
         return deadline;
+    }
+
+    /** Returns whether this deadline falls on the supplied date. */
+    @Override
+    public boolean occursOn(LocalDate date) {
+        return deadline.toLocalDate().equals(date);
     }
 }

@@ -13,14 +13,25 @@ Aim: Verify that deadlines and events parse ISO dates/times and display friendly
 ### Inputs
 
 ```text
-deadline return book /by 2019-12-02 1800
-event project meeting /from 2019-12-02 1400 /to 2019-12-02 1600
+deadline return book /by 02-12-2019 1800
+event project meeting /from 02-12-2019 1400 /to 02-12-2019 1600
 list
 bye
 ```
 
 Expected display includes `Dec 2 2019 18:00` for the deadline and
 `Dec 2 2019 14:00` to `Dec 2 2019 16:00` for the event.
+
+## Manual test: filter dated tasks
+Aim: Verify that `list on dd-MM-yyyy` shows only deadlines and events occurring on that date.
+
+Create a Todo, a Deadline, and an Event dated `02-12-2019`, then enter:
+
+```text
+list on 02-12-2019
+```
+
+The Todo should be excluded, while the matching Deadline and Event should be listed.
 
 ## Manual test: corrupted data recovery
 Aim: Verify that malformed records are reported and skipped while valid records still load.

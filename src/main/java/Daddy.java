@@ -16,8 +16,8 @@ public class Daddy {
     private static final Path DATA_FILE = Path.of("data", "duke.txt");
     private static final Path BACKUP_FILE = Path.of("data", "duke.txt.backup");
     private static final Path CORRUPTED_FILE = Path.of("data", "duke.txt.corrupt");
-    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-    private static final DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HHmm");
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+    private static final DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("dd-MM-yyyy HHmm");
     private static final List<Task> tasks = new ArrayList<>();
 
     public static void main(String[] args) {
@@ -52,6 +52,8 @@ public class Daddy {
                     break;
                 } else if (input.equalsIgnoreCase("list")) {
                     printList();
+                } else if (input.toLowerCase().startsWith("list on ")) {
+                    listTasksOnDate(input.substring(8).trim());
                 } else if (input.equalsIgnoreCase("todo") || input.toLowerCase().startsWith("todo ")) {
                     addTodo(input.length() == 4 ? "" : input.substring(5).trim());
                 } else if (input.equalsIgnoreCase("mark")) {
@@ -99,6 +101,28 @@ public class Daddy {
         System.out.println(INDENT + "____________________________________________________________");
     }
 
+    private static void listTasksOnDate(String dateText) throws DaddyException {
+        try {
+            LocalDate date = LocalDate.parse(dateText, DATE_FORMAT);
+            System.out.println(INDENT + "____________________________________________________________");
+            System.out.println(INDENT + " Tasks occurring on " + date + ":");
+            int displayedTaskNumber = 1;
+            for (Task task : tasks) {
+                if (task.occursOn(date)) {
+                    System.out.println(INDENT + " " + displayedTaskNumber + "." + task.getTypeIcon()
+                            + "[" + task.getStatusIcon() + "] " + task.getDisplayDescription());
+                    displayedTaskNumber++;
+                }
+            }
+            if (displayedTaskNumber == 1) {
+                System.out.println(INDENT + " No deadlines or events found for that date.");
+            }
+            System.out.println(INDENT + "____________________________________________________________");
+        } catch (DateTimeParseException exception) {
+            throw new DaddyException("That date needs dd-MM-yyyy format. Try: list on 02-12-2019");
+        }
+    }
+
     private static void addTodo(String description) throws DaddyException {
         if (description.isEmpty()) {
             throw new DaddyException("Hmm, what are you thinking of doing today? You need a description "
@@ -129,8 +153,8 @@ public class Daddy {
         try {
             tasks.add(new Deadline(description, parseDateTime(deadline)));
         } catch (DateTimeParseException exception) {
-            throw new DaddyException("That deadline date needs yyyy-MM-dd or yyyy-MM-dd HHmm format. "
-                    + "Try: deadline return book /by 2019-12-02 1800");
+            throw new DaddyException("That deadline date needs dd-MM-yyyy or dd-MM-yyyy HHmm format. "
+                    + "Try: deadline return book /by 02-12-2019 1800");
         }
         saveTasks();
 
@@ -160,8 +184,8 @@ public class Daddy {
         try {
             tasks.add(new Event(description, parseDateTime(from), parseDateTime(to)));
         } catch (DateTimeParseException exception) {
-            throw new DaddyException("Event times need yyyy-MM-dd or yyyy-MM-dd HHmm format. "
-                    + "Try: event meeting /from 2019-12-02 1400 /to 2019-12-02 1600");
+            throw new DaddyException("Event times need dd-MM-yyyy or dd-MM-yyyy HHmm format. "
+                    + "Try: event meeting /from 02-12-2019 1400 /to 02-12-2019 1600");
         }
         saveTasks();
 
