@@ -1,4 +1,3 @@
-import java.util.ArrayList;
 import java.util.List;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -18,7 +17,7 @@ public class Daddy {
     private static final Path CORRUPTED_FILE = Path.of("data", "duke.txt.corrupt");
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd-MM-yyyy");
     private static final DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("dd-MM-yyyy HHmm");
-    private static final List<Task> tasks = new ArrayList<>();
+    private static final TaskList tasks = new TaskList();
 
     public static void main(String[] args) {
         printGreeting();
@@ -267,7 +266,7 @@ public class Daddy {
 
         try {
             List<String> lines = Files.readAllLines(DATA_FILE);
-            List<String> corruptedLines = new ArrayList<>();
+            List<String> corruptedLines = new java.util.ArrayList<>();
             for (int lineNumber = 0; lineNumber < lines.size(); lineNumber++) {
                 String line = lines.get(lineNumber);
                 if (line.isBlank()) {
@@ -328,7 +327,7 @@ public class Daddy {
     private static void saveTasks() throws DaddyException {
         try {
             Files.createDirectories(DATA_FILE.getParent());
-            List<String> lines = new ArrayList<>();
+            List<String> lines = new java.util.ArrayList<>();
             for (Task task : tasks) {
                 String description = task.getDescription().replace("|", " ");
                 String status = task.getStatusIcon().equals("X") ? "1" : "0";
