@@ -1,4 +1,5 @@
 import java.time.LocalDate;
+import java.util.List;
 
 /**
  * Handles all console output shown to a Daddy user.
@@ -30,10 +31,11 @@ public class Ui {
     public void showTaskList(TaskList tasks) {
         printDivider();
         System.out.println(INDENT + " Here are the tasks in your list:");
-        for (int i = 0; i < tasks.size(); i++) {
-            Task task = tasks.get(i);
-            System.out.println(INDENT + " " + (i + 1) + "." + task.getTypeIcon()
+        int taskNumber = 1;
+        for (Task task : tasks) {
+            System.out.println(INDENT + " " + taskNumber + "." + task.getTypeIcon()
                     + "[" + task.getStatusIcon() + "] " + task.getDisplayDescription());
+            taskNumber++;
         }
         printDivider();
     }
@@ -42,18 +44,16 @@ public class Ui {
      * Displays tasks that occur on the supplied date.
      *
      * @param date the date used to filter tasks
-     * @param tasks the tasks to search
+     * @param tasks the tasks that occur on the date
      */
-    public void showTasksOnDate(LocalDate date, TaskList tasks) {
+    public void showTasksOnDate(LocalDate date, List<Task> tasks) {
         printDivider();
         System.out.println(INDENT + " Tasks occurring on " + date + ":");
         int displayedTaskNumber = 1;
         for (Task task : tasks) {
-            if (task.occursOn(date)) {
-                System.out.println(INDENT + " " + displayedTaskNumber + "." + task.getTypeIcon()
-                        + "[" + task.getStatusIcon() + "] " + task.getDisplayDescription());
-                displayedTaskNumber++;
-            }
+            System.out.println(INDENT + " " + displayedTaskNumber + "." + task.getTypeIcon()
+                    + "[" + task.getStatusIcon() + "] " + task.getDisplayDescription());
+            displayedTaskNumber++;
         }
         if (displayedTaskNumber == 1) {
             System.out.println(INDENT + " No deadlines or events found for that date.");

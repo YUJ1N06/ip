@@ -1,3 +1,4 @@
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -23,13 +24,37 @@ public class TaskList implements Iterable<Task> {
     }
 
     /**
-     * Returns the task at a zero-based index.
+     * Returns whether a zero-based index identifies a task in this list.
      *
      * @param index the zero-based task index
-     * @return the task at the requested index
+     * @return whether the index is in range
      */
-    public Task get(int index) {
-        return tasks.get(index);
+    public boolean hasTaskAt(int index) {
+        return index >= 0 && index < tasks.size();
+    }
+
+    /**
+     * Marks the task at a zero-based index as done.
+     *
+     * @param index the zero-based task index
+     * @return the task that was marked
+     */
+    public Task markTaskAsDone(int index) {
+        Task task = tasks.get(index);
+        task.markAsDone();
+        return task;
+    }
+
+    /**
+     * Marks the task at a zero-based index as not done.
+     *
+     * @param index the zero-based task index
+     * @return the task that was unmarked
+     */
+    public Task markTaskAsNotDone(int index) {
+        Task task = tasks.get(index);
+        task.markAsNotDone();
+        return task;
     }
 
     /**
@@ -38,8 +63,24 @@ public class TaskList implements Iterable<Task> {
      * @param index the zero-based task index
      * @return the removed task
      */
-    public Task remove(int index) {
+    public Task removeTaskAt(int index) {
         return tasks.remove(index);
+    }
+
+    /**
+     * Returns the tasks that occur on a supplied date.
+     *
+     * @param date the date to match
+     * @return an unmodifiable list of matching tasks in their list order
+     */
+    public List<Task> getTasksOccurringOn(LocalDate date) {
+        List<Task> matchingTasks = new ArrayList<>();
+        for (Task task : tasks) {
+            if (task.occursOn(date)) {
+                matchingTasks.add(task);
+            }
+        }
+        return List.copyOf(matchingTasks);
     }
 
     /**

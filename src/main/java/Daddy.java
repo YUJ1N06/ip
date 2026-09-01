@@ -92,7 +92,7 @@ public class Daddy {
     private static void listTasksOnDate(String dateText) throws DaddyException {
         try {
             LocalDate date = LocalDate.parse(dateText, DATE_FORMAT);
-            ui.showTasksOnDate(date, tasks);
+            ui.showTasksOnDate(date, tasks.getTasksOccurringOn(date));
         } catch (DateTimeParseException exception) {
             throw new DaddyException("That date needs dd-MM-yyyy format. Try: list on 02-12-2019");
         }
@@ -157,49 +157,43 @@ public class Daddy {
     }
 
     private static void markTask(String taskNumber) throws DaddyException {
-        try {
-            int taskIndex = Integer.parseInt(taskNumber) - 1;
-            if (taskIndex < 0 || taskIndex >= tasks.size()) {
-                throw new DaddyException("That task number is out of range. Pick a number from 1 to " + tasks.size() + ".");
-            }
-
-            Task task = tasks.get(taskIndex);
-            task.markAsDone();
-            storage.save(tasks);
-            ui.showTaskMarked(task);
-        } catch (NumberFormatException exception) {
-            throw new DaddyException("'" + taskNumber + "' is not a task number. Try mark 1, for example.");
-        }
+        int taskIndex = getTaskIndex(taskNumber, "mark");
+        Task task = tasks.markTaskAsDone(taskIndex);
+        storage.save(tasks);
+        ui.showTaskMarked(task);
     }
 
     private static void unmarkTask(String taskNumber) throws DaddyException {
-        try {
-            int taskIndex = Integer.parseInt(taskNumber) - 1;
-            if (taskIndex < 0 || taskIndex >= tasks.size()) {
-                throw new DaddyException("That task number is out of range. Pick a number from 1 to " + tasks.size() + ".");
-            }
-
-            Task task = tasks.get(taskIndex);
-            task.markAsNotDone();
-            storage.save(tasks);
-            ui.showTaskUnmarked(task);
-        } catch (NumberFormatException exception) {
-            throw new DaddyException("'" + taskNumber + "' is not a task number. Try unmark 1, for example.");
-        }
+        int taskIndex = getTaskIndex(taskNumber, "unmark");
+        Task task = tasks.markTaskAsNotDone(taskIndex);
+        storage.save(tasks);
+        ui.showTaskUnmarked(task);
     }
 
     private static void deleteTask(String taskNumber) throws DaddyException {
+        int taskIndex = getTaskIndex(taskNumber, "delete");
+        Task removedTask = tasks.removeTaskAt(taskIndex);
+        storage.save(tasks);
+        ui.showTaskDeleted(removedTask, tasks.size());
+    }
+
+    /**
+     * Converts a one-based task number into a valid zero-based task index.
+     *
+     * @param taskNumber the task number entered by the user
+     * @param command the command that uses the task number
+     * @return the matching zero-based task index
+     * @throws DaddyException if the supplied task number is invalid
+     */
+    private static int getTaskIndex(String taskNumber, String command) throws DaddyException {
         try {
             int taskIndex = Integer.parseInt(taskNumber) - 1;
-            if (taskIndex < 0 || taskIndex >= tasks.size()) {
+            if (!tasks.hasTaskAt(taskIndex)) {
                 throw new DaddyException("That task number is out of range. Pick a number from 1 to " + tasks.size() + ".");
             }
-
-            Task removedTask = tasks.remove(taskIndex);
-            storage.save(tasks);
-            ui.showTaskDeleted(removedTask, tasks.size());
+            return taskIndex;
         } catch (NumberFormatException exception) {
-            throw new DaddyException("'" + taskNumber + "' is not a task number. Try delete 1, for example.");
+            throw new DaddyException("'" + taskNumber + "' is not a task number. Try " + command + " 1, for example.");
         }
     }
 
