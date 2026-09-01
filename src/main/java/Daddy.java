@@ -17,7 +17,8 @@ public class Daddy {
             String input = ui.readCommand();
 
             try {
-                if (executeCommand(input)) {
+                Command command = parser.parseCommand(input);
+                if (execute(command)) {
                     break;
                 }
             } catch (DaddyException exception) {
@@ -26,44 +27,6 @@ public class Daddy {
         }
 
         ui.close();
-    }
-
-    /**
-     * Executes one recognized command.
-     *
-     * @param input the complete command entered by the user
-     * @return whether the command ends the chat session
-     * @throws DaddyException if the command is invalid or cannot be completed
-     */
-    private static boolean executeCommand(String input) throws DaddyException {
-        CommandType commandType = parser.parse(input);
-        String arguments = parser.getArguments(input, commandType);
-        switch (commandType) {
-        case BYE:
-            return execute(new ExitCommand());
-        case LIST:
-        case LIST_ON:
-            return execute(parser.parseListCommand(commandType, arguments));
-        case TODO:
-        case DEADLINE:
-        case EVENT:
-            return execute(parser.parseAddCommand(commandType, arguments));
-        case MARK:
-        case UNMARK:
-            return execute(parser.parseTaskStateCommand(commandType, arguments));
-        case DELETE:
-            return execute(parser.parseDeleteCommand(arguments));
-        case MARK_MISSING_ARGUMENT:
-            throw new DaddyException("MARK?! Mark what... Try: mark 1 (after adding a task first).");
-        case UNMARK_MISSING_ARGUMENT:
-            throw new DaddyException("UNMARK?! Unmark what... Try: unmark 1 (after adding a task first).");
-        case DELETE_MISSING_ARGUMENT:
-            throw new DaddyException("DELETE?! Delete what... Try: delete 1 (choose a task number first).");
-        case UNKNOWN:
-            throw new DaddyException("Daddy has no clue what '" + input
-                    + "' means. Try todo, deadline, event, list, mark, unmark, delete, or bye.");
-        }
-        throw new IllegalStateException("Unhandled command type: " + commandType);
     }
 
     /**

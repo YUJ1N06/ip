@@ -5,11 +5,38 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
 /**
- * Recognizes Daddy commands and extracts their argument text.
+ * Converts complete Daddy command lines into command objects.
  */
 public class Parser {
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd-MM-yyyy");
     private static final DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("dd-MM-yyyy HHmm");
+
+    /**
+     * Creates a command object from one complete user command.
+     *
+     * @param input the complete command entered by the user
+     * @return the command object that represents the user's request
+     * @throws DaddyException if the command is unknown or its arguments are invalid
+     */
+    public Command parseCommand(String input) throws DaddyException {
+        CommandType commandType = getCommandType(input);
+        String arguments = getArguments(input, commandType);
+        return switch (commandType) {
+        case BYE -> new ExitCommand();
+        case LIST, LIST_ON -> parseListCommand(commandType, arguments);
+        case TODO, DEADLINE, EVENT -> parseAddCommand(commandType, arguments);
+        case MARK, UNMARK -> parseTaskStateCommand(commandType, arguments);
+        case DELETE -> parseDeleteCommand(arguments);
+        case MARK_MISSING_ARGUMENT -> throw new DaddyException(
+                "MARK?! Mark what... Try: mark 1 (after adding a task first).");
+        case UNMARK_MISSING_ARGUMENT -> throw new DaddyException(
+                "UNMARK?! Unmark what... Try: unmark 1 (after adding a task first).");
+        case DELETE_MISSING_ARGUMENT -> throw new DaddyException(
+                "DELETE?! Delete what... Try: delete 1 (choose a task number first).");
+        case UNKNOWN -> throw new DaddyException("Daddy has no clue what '" + input
+                + "' means. Try todo, deadline, event, list, mark, unmark, delete, or bye.");
+        };
+    }
 
     /**
      * Determines the type of a command without changing its argument text.
@@ -17,7 +44,7 @@ public class Parser {
      * @param input the complete command entered by the user
      * @return the recognized command type, or {@link CommandType#UNKNOWN}
      */
-    public CommandType parse(String input) {
+    private CommandType getCommandType(String input) {
         String lowerCaseInput = input.toLowerCase();
         if (input.equalsIgnoreCase("bye")) {
             return CommandType.BYE;
@@ -55,7 +82,7 @@ public class Parser {
      * @param commandType the recognized command type
      * @return the argument text, or an empty string when the command has no arguments
      */
-    public String getArguments(String input, CommandType commandType) {
+    private String getArguments(String input, CommandType commandType) {
         return switch (commandType) {
         case LIST_ON -> input.substring(8).trim();
         case TODO -> input.length() == 4 ? "" : input.substring(5).trim();
@@ -74,7 +101,7 @@ public class Parser {
      * @return the parsed date
      * @throws DaddyException if the date does not use {@code dd-MM-yyyy} format
      */
-    public LocalDate parseListDate(String dateText) throws DaddyException {
+    private LocalDate parseListDate(String dateText) throws DaddyException {
         try {
             return LocalDate.parse(dateText, DATE_FORMAT);
         } catch (DateTimeParseException exception) {
@@ -90,7 +117,7 @@ public class Parser {
      * @return the matching zero-based task index
      * @throws DaddyException if the task number is not numeric
      */
-    public int parseTaskIndex(String taskNumber, String command) throws DaddyException {
+    private int parseTaskIndex(String taskNumber, String command) throws DaddyException {
         try {
             return Integer.parseInt(taskNumber) - 1;
         } catch (NumberFormatException exception) {
@@ -106,7 +133,7 @@ public class Parser {
      * @return a command that displays tasks
      * @throws DaddyException if a list date is invalid
      */
-    public Command parseListCommand(CommandType commandType, String arguments) throws DaddyException {
+    private Command parseListCommand(CommandType commandType, String arguments) throws DaddyException {
         return switch (commandType) {
         case LIST -> new ListCommand();
         case LIST_ON -> new ListOnDateCommand(parseListDate(arguments));
@@ -122,7 +149,7 @@ public class Parser {
      * @return a command that adds the parsed task
      * @throws DaddyException if the task details are incomplete or incorrectly formatted
      */
-    public Command parseAddCommand(CommandType commandType, String taskDetails) throws DaddyException {
+    private Command parseAddCommand(CommandType commandType, String taskDetails) throws DaddyException {
         return new AddCommand(parseTask(commandType, taskDetails));
     }
 
@@ -134,7 +161,7 @@ public class Parser {
      * @return a command that marks or unmarks the selected task
      * @throws DaddyException if the task number is not numeric
      */
-    public Command parseTaskStateCommand(CommandType commandType, String taskNumber) throws DaddyException {
+    private Command parseTaskStateCommand(CommandType commandType, String taskNumber) throws DaddyException {
         return switch (commandType) {
         case MARK -> new MarkCommand(parseTaskIndex(taskNumber, "mark"));
         case UNMARK -> new UnmarkCommand(parseTaskIndex(taskNumber, "unmark"));
@@ -149,7 +176,7 @@ public class Parser {
      * @return a command that deletes the selected task
      * @throws DaddyException if the task number is not numeric
      */
-    public Command parseDeleteCommand(String taskNumber) throws DaddyException {
+    private Command parseDeleteCommand(String taskNumber) throws DaddyException {
         return new DeleteCommand(parseTaskIndex(taskNumber, "delete"));
     }
 
@@ -161,7 +188,7 @@ public class Parser {
      * @return the task described by the command
      * @throws DaddyException if the task details are incomplete or incorrectly formatted
      */
-    public Task parseTask(CommandType commandType, String taskDetails) throws DaddyException {
+    private Task parseTask(CommandType commandType, String taskDetails) throws DaddyException {
         return switch (commandType) {
         case TODO -> parseTodo(taskDetails);
         case DEADLINE -> parseDeadline(taskDetails);
