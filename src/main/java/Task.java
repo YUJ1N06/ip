@@ -67,4 +67,9 @@ public class Task {
     public String getTypeIcon() {
         return type.getIcon();
     }
+
+    /** Returns this task's type for persistence. */
+    public TaskType getType() {
+        return type;
+    }
 }
