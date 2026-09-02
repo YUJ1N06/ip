@@ -9,6 +9,10 @@ import daddy.ui.Ui;
  * Represents one action that can be performed in response to a user command.
  */
 public abstract class Command {
+    /** Creates a command for a user-requested application action. */
+    protected Command() {
+    }
+
     /**
      * Performs this command using the application's collaborating objects.
      *

@@ -6,8 +6,11 @@ import java.time.LocalDate;
  * Represents one task in the task list.
  */
 public class Task {
+    /** Stores the text that describes this task. */
     private final String description;
+    /** Stores the category used to display and persist this task. */
     private final TaskType type;
+    /** Records whether the task has been completed. */
     private boolean isDone;
 
     /**
@@ -19,7 +22,12 @@ public class Task {
         this(description, TaskType.GENERAL);
     }
 
-    /** Creates a task with the specified type. */
+    /**
+     * Creates a task with the specified type.
+     *
+     * @param description the task description
+     * @param type the kind of task being created
+     */
     protected Task(String description, TaskType type) {
         this.description = description;
         this.type = type;
@@ -49,7 +57,11 @@ public class Task {
         return description;
     }
 
-    /** Returns the description used when displaying this task. */
+    /**
+     * Returns the description used when displaying this task.
+     *
+     * @return the task description without a type-specific date or time
+     */
     public String getDisplayDescription() {
         return description;
     }
@@ -72,12 +84,21 @@ public class Task {
         return type.getIcon();
     }
 
-    /** Returns this task's type for persistence. */
+    /**
+     * Returns this task's type for persistence.
+     *
+     * @return the task type
+     */
     public TaskType getType() {
         return type;
     }
 
-    /** Returns whether this task occurs on the supplied date. */
+    /**
+     * Returns whether this task occurs on the supplied date.
+     *
+     * @param date the date to check
+     * @return {@code false}, because a general task has no associated date
+     */
     public boolean occursOn(LocalDate date) {
         return false;
     }

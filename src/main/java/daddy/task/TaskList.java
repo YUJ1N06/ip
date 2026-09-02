@@ -9,6 +9,7 @@ import java.util.List;
  * Stores the tasks managed by Daddy and provides list-level operations.
  */
 public class TaskList implements Iterable<Task> {
+    /** Stores tasks in the same order in which they are displayed to the user. */
     private final List<Task> tasks;
 
     /** Creates an empty task list. */

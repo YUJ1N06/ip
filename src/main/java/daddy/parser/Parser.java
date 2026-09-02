@@ -24,8 +24,14 @@ import daddy.task.Todo;
  * Converts complete Daddy command lines into command objects.
  */
 public class Parser {
+    /** Parses date-only task values in day-month-year order. */
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+    /** Parses date-and-time task values in day-month-year order. */
     private static final DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("dd-MM-yyyy HHmm");
+
+    /** Creates a parser for Daddy command lines. */
+    public Parser() {
+    }
 
     /**
      * Creates a command object from one complete user command.
@@ -213,7 +219,13 @@ public class Parser {
         };
     }
 
-    /** Creates a todo from its description. */
+    /**
+     * Creates a todo task from its description.
+     *
+     * @param description the user-entered todo description
+     * @return a todo with the supplied description
+     * @throws DaddyException if the description is empty
+     */
     private Task parseTodo(String description) throws DaddyException {
         if (description.isEmpty()) {
             throw new DaddyException("Hmm, what are you thinking of doing today? You need a description "
@@ -222,7 +234,13 @@ public class Parser {
         return new Todo(description);
     }
 
-    /** Creates a deadline from its description and {@code /by} date or time. */
+    /**
+     * Creates a deadline from its description and {@code /by} date or time.
+     *
+     * @param taskDetails the description and deadline details entered by the user
+     * @return a deadline task with a parsed due date or time
+     * @throws DaddyException if a description or deadline is missing or incorrectly formatted
+     */
     private Task parseDeadline(String taskDetails) throws DaddyException {
         int byIndex = taskDetails.indexOf(" /by ");
         String description = byIndex >= 0 ? taskDetails.substring(0, byIndex).trim() : taskDetails;
@@ -242,7 +260,13 @@ public class Parser {
         }
     }
 
-    /** Creates an event from its description and {@code /from} and {@code /to} times. */
+    /**
+     * Creates an event from its description and {@code /from} and {@code /to} times.
+     *
+     * @param taskDetails the description and event time details entered by the user
+     * @return an event task with parsed start and end times
+     * @throws DaddyException if event details are missing or incorrectly formatted
+     */
     private Task parseEvent(String taskDetails) throws DaddyException {
         int fromIndex = taskDetails.indexOf(" /from ");
         int toIndex = taskDetails.indexOf(" /to ");
@@ -265,7 +289,13 @@ public class Parser {
         }
     }
 
-    /** Parses a date or date-time accepted in task-creation commands. */
+    /**
+     * Parses a date or date-time accepted in task-creation commands.
+     *
+     * @param value the text to parse in {@code dd-MM-yyyy} or {@code dd-MM-yyyy HHmm} format
+     * @return the parsed date-time, using midnight for a date without a time
+     * @throws DateTimeParseException if the value matches neither supported format
+     */
     private LocalDateTime parseDateTime(String value) {
         try {
             return LocalDateTime.parse(value, DATE_TIME_FORMAT);

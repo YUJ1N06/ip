@@ -11,8 +11,11 @@ import daddy.task.TaskList;
  * Handles all console output shown to a Daddy user.
  */
 public class Ui {
+    /** Indents every line shown in Daddy's console interface. */
     private static final String INDENT = "    ";
+    /** Separates distinct messages in Daddy's console interface. */
     private static final String DIVIDER = "____________________________________________________________";
+    /** Reads commands entered through standard input. */
     private final Scanner scanner;
 
     /** Creates a user interface that reads commands from standard input. */
@@ -163,7 +166,11 @@ public class Ui {
         System.out.println(INDENT + DIVIDER);
     }
 
-    /** Prints every banner line with the standard indentation. */
+    /**
+     * Prints every line in a banner with the standard indentation.
+     *
+     * @param banner the multi-line banner to print
+     */
     private void printIndentedBanner(String banner) {
         for (String line : banner.split("\\n")) {
             System.out.println(INDENT + line);

@@ -10,6 +10,7 @@ import daddy.ui.Ui;
  * Displays the deadline and event tasks that occur on a specific date.
  */
 public class ListOnDateCommand extends Command {
+    /** Stores the date used to filter listed tasks. */
     private final LocalDate date;
 
     /**

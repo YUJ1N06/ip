@@ -19,9 +19,13 @@ import daddy.task.Todo;
  * Loads tasks from and saves tasks to Daddy's data files.
  */
 public class Storage {
+    /** Identifies the file that stores Daddy's current saved tasks. */
     private final Path dataFile;
+    /** Identifies the old Duke-named data file that can be migrated once. */
     private final Path legacyDataFile;
+    /** Identifies the copy of the original data file made during corruption recovery. */
     private final Path backupFile;
+    /** Identifies the file that records malformed data-file lines. */
     private final Path corruptedFile;
 
     /**
@@ -124,7 +128,13 @@ public class Storage {
         }
     }
 
-    /** Creates a task from one validated data-file record. */
+    /**
+     * Creates a task from one validated data-file record.
+     *
+     * @param fields the pipe-separated fields in one saved task record
+     * @return the task represented by the record
+     * @throws IllegalArgumentException if the record has an invalid task type or field count
+     */
     private Task createTask(String[] fields) {
         if (fields.length < 3 || !(fields[1].equals("0") || fields[1].equals("1"))) {
             throw new IllegalArgumentException("invalid task record");
@@ -152,7 +162,12 @@ public class Storage {
         };
     }
 
-    /** Converts a task into one line in Daddy's persistent file format. */
+    /**
+     * Converts a task into one line in Daddy's persistent file format.
+     *
+     * @param task the task to save
+     * @return the pipe-separated record representing the task
+     */
     private String serialize(Task task) {
         String description = task.getDescription().replace("|", " ");
         String status = task.getStatusIcon().equals("X") ? "1" : "0";

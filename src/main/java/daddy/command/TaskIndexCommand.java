@@ -7,6 +7,7 @@ import daddy.task.TaskList;
  * Provides shared task-index validation for commands that act on one task.
  */
 public abstract class TaskIndexCommand extends Command {
+    /** Stores the zero-based index of the task targeted by this command. */
     private final int taskIndex;
 
     /**
