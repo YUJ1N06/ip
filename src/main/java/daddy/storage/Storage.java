@@ -20,16 +20,19 @@ import daddy.task.Todo;
  */
 public class Storage {
     private final Path dataFile;
+    private final Path legacyDataFile;
     private final Path backupFile;
     private final Path corruptedFile;
 
     /**
-     * Creates storage that uses the supplied task data file.
+     * Creates storage that uses a new data file and migrates an older one when necessary.
      *
      * @param dataFile the file used to persist tasks
+     * @param legacyDataFile the previous task data file name
      */
-    public Storage(Path dataFile) {
+    public Storage(Path dataFile, Path legacyDataFile) {
         this.dataFile = dataFile;
+        this.legacyDataFile = legacyDataFile;
         this.backupFile = dataFile.resolveSibling(dataFile.getFileName() + ".backup");
         this.corruptedFile = dataFile.resolveSibling(dataFile.getFileName() + ".corrupt");
     }
@@ -42,6 +45,7 @@ public class Storage {
      */
     public List<String> loadInto(TaskList tasks) {
         List<String> messages = new ArrayList<>();
+        migrateLegacyDataFileIfNeeded(messages);
         if (!Files.exists(dataFile)) {
             return messages;
         }
@@ -78,6 +82,24 @@ public class Storage {
             messages.add("Daddy couldn't load the task list. Check " + dataFile + " and try again.");
         }
         return messages;
+    }
+
+    /**
+     * Moves the legacy data file to the current file name when no current data file exists.
+     *
+     * @param messages messages to show the user about migration problems or completion
+     */
+    private void migrateLegacyDataFileIfNeeded(List<String> messages) {
+        if (Files.exists(dataFile) || !Files.exists(legacyDataFile)) {
+            return;
+        }
+        try {
+            Files.move(legacyDataFile, dataFile);
+            messages.add("Daddy moved your saved tasks from " + legacyDataFile + " to " + dataFile + ".");
+        } catch (IOException exception) {
+            messages.add("Daddy couldn't migrate saved tasks from " + legacyDataFile + " to " + dataFile
+                    + ". Your old tasks are still in " + legacyDataFile + ".");
+        }
     }
 
     /**

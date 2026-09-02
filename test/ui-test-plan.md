@@ -36,7 +36,7 @@ The Todo should be excluded, while the matching Deadline and Event should be lis
 ## Manual test: corrupted data recovery
 Aim: Verify that malformed records are reported and skipped while valid records still load.
 
-Before starting the app, place these lines in `data/duke.txt`:
+Before starting the app, place these lines in `data/daddy.txt`:
 
 ```text
 T|1|keep me
@@ -48,8 +48,21 @@ E|x|bad
 Start the app and enter `list`. The console should report corrupted lines 2 and 4,
 while listing `keep me` as done and `return book` as not done. The app should
 remain usable and accept `bye` normally. It should also create
-`data/duke.txt.backup` containing the original file and
-`data/duke.txt.corrupt` containing the rejected records with line numbers.
+`data/daddy.txt.backup` containing the original file and
+`data/daddy.txt.corrupt` containing the rejected records with line numbers.
+
+## Manual test: legacy Duke data migration
+Aim: Verify that saved tasks from the previous Duke file name are preserved.
+
+Ensure `data/daddy.txt` does not exist, then place this line in `data/duke.txt`:
+
+~~~text
+T|1|keep me
+~~~
+
+Start the app and enter `list`. It should report that it moved the saved tasks to
+`data/daddy.txt` and list `keep me` as done. Afterward, `data/daddy.txt` should
+exist and `data/duke.txt` should no longer exist.
 
 ## Manual test: saved tasks load after restart
 Aim: Verify that a task saved by one app session is restored by the next session.

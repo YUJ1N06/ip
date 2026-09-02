@@ -11,7 +11,8 @@ import daddy.ui.Ui;
 
 public class Daddy {
     private static final TaskList tasks = new TaskList();
-    private static final Storage storage = new Storage(Path.of("data", "duke.txt"));
+    private static final Storage storage = new Storage(
+            Path.of("data", "daddy.txt"), Path.of("data", "duke.txt"));
     private static final Ui ui = new Ui();
     private static final Parser parser = new Parser();
 
