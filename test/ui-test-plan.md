@@ -138,6 +138,7 @@ mark
 unmark
 deadline
 event
+find
 list
 mark abc
 deadline report
@@ -178,6 +179,9 @@ bye
      What exciting event are you planning? Give it a name so Daddy can keep track. Try: event meeting /from Mon 2pm /to 4pm.
     ____________________________________________________________
     ____________________________________________________________
+     FIND?! Find what... Try: find book.
+    ____________________________________________________________
+    ____________________________________________________________
      Here are the tasks in your list:
      1.[T][ ] buy milk
     ____________________________________________________________
@@ -193,6 +197,70 @@ bye
     ____________________________________________________________
      Here are the tasks in your list:
      1.[T][ ] buy milk
+    ____________________________________________________________
+    Bye. See you soon :)
+    ____________________________________________________________
+```
+
+## Test case: find matches tasks without changing the list
+Aim: Verify that find ignores letter case, displays every matching task in order, and leaves the task list unchanged when no tasks match.
+
+### Command
+java -cp /tmp/daddy-classes daddy.Daddy
+
+### Input
+todo read book
+mark 1
+deadline return book /by 06-06-2026
+mark 2
+find BOOK
+find bread
+list
+bye
+
+### Expected output
+```text
+    ____________________________________________________________
+     ____                      _       _       
+    |  _ \   __ _   __| |   __| |  _   _ 
+    | | | | / _` | / _` |  / _` | | | | |
+    | | | || (_| || (_| | | (_| | | |_| |
+    | |_| | \__,_| \__,_|  \__,_|  \__, |
+    |____/                          |___/ 
+    Hello, little one.
+    What can I assist you with today ;)?
+    ____________________________________________________________
+    ____________________________________________________________
+     Got it. I've added this task:
+       [T][ ] read book
+     Now you have 1 tasks in the list.
+    ____________________________________________________________
+    ____________________________________________________________
+     Nice! I've marked this task as done:
+       [X] read book
+    ____________________________________________________________
+    ____________________________________________________________
+     Got it. I've added this task:
+       [D][ ] return book (by: Jun 6 2026 00:00)
+     Now you have 2 tasks in the list.
+    ____________________________________________________________
+    ____________________________________________________________
+     Nice! I've marked this task as done:
+       [X] return book (by: Jun 6 2026 00:00)
+    ____________________________________________________________
+    ____________________________________________________________
+     Here are the matching tasks in your list:
+     1.[T][X] read book
+     2.[D][X] return book (by: Jun 6 2026 00:00)
+    ____________________________________________________________
+    ____________________________________________________________
+     Here are the matching tasks in your list:
+     No matching tasks found.
+    ____________________________________________________________
+    ____________________________________________________________
+     Here are the tasks in your list:
+     1.[T][X] read book
+     2.[D][X] return book (by: Jun 6 2026 00:00)
     ____________________________________________________________
     Bye. See you soon :)
     ____________________________________________________________

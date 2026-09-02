@@ -101,6 +101,25 @@ class TaskListTest {
     }
 
     /**
+     * Verifies that description matching ignores case, preserves task order, and returns an immutable result.
+     */
+    @Test
+    void getTasksMatching_matchingDescriptions_returnsTasksInOrderAndImmutableResult() {
+        TaskList tasks = new TaskList();
+        Task matchingTodo = new Todo("read Book");
+        Task nonMatchingTask = new Todo("buy bread");
+        Task matchingDeadline = new Deadline("return book", LocalDateTime.of(2026, 12, 2, 18, 0));
+        tasks.add(matchingTodo);
+        tasks.add(nonMatchingTask);
+        tasks.add(matchingDeadline);
+
+        List<Task> matchingTasks = tasks.getTasksMatching("BOOK");
+
+        assertEquals(List.of(matchingTodo, matchingDeadline), matchingTasks);
+        assertThrows(UnsupportedOperationException.class, () -> matchingTasks.add(nonMatchingTask));
+    }
+
+    /**
      * Converts a task list into a list to allow order assertions.
      *
      * @param tasks the task list to read

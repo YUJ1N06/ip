@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Stores the tasks managed by Daddy and provides list-level operations.
@@ -80,6 +81,23 @@ public class TaskList implements Iterable<Task> {
         List<Task> matchingTasks = new ArrayList<>();
         for (Task task : tasks) {
             if (task.occursOn(date)) {
+                matchingTasks.add(task);
+            }
+        }
+        return List.copyOf(matchingTasks);
+    }
+
+    /**
+     * Returns tasks whose descriptions contain a keyword, ignoring letter case.
+     *
+     * @param keyword the text to find in task descriptions
+     * @return an unmodifiable list of matching tasks in their list order
+     */
+    public List<Task> getTasksMatching(String keyword) {
+        String lowerCaseKeyword = keyword.toLowerCase(Locale.ROOT);
+        List<Task> matchingTasks = new ArrayList<>();
+        for (Task task : tasks) {
+            if (task.getDescription().toLowerCase(Locale.ROOT).contains(lowerCaseKeyword)) {
                 matchingTasks.add(task);
             }
         }

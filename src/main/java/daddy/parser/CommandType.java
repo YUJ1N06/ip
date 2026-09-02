@@ -22,12 +22,16 @@ public enum CommandType {
     UNMARK,
     /** Removes one task. */
     DELETE,
+    /** Displays tasks whose descriptions contain a keyword. */
+    FIND,
     /** Represents a mark command without a task number. */
     MARK_MISSING_ARGUMENT,
     /** Represents an unmark command without a task number. */
     UNMARK_MISSING_ARGUMENT,
     /** Represents a delete command without a task number. */
     DELETE_MISSING_ARGUMENT,
+    /** Represents a find command without a keyword. */
+    FIND_MISSING_ARGUMENT,
     /** Represents unrecognized input. */
     UNKNOWN
 }
