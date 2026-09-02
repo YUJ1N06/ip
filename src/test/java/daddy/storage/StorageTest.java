@@ -1,0 +1,147 @@
+package daddy.storage;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
+import daddy.task.Deadline;
+import daddy.task.Event;
+import daddy.task.Task;
+import daddy.task.TaskList;
+import daddy.task.Todo;
+
+/**
+ * Tests persistence, legacy migration, and corrupt-record recovery in task storage.
+ */
+class StorageTest {
+    /** Provides an empty temporary folder for every storage scenario. */
+    @TempDir
+    Path temporaryDirectory;
+
+    /**
+     * Verifies that all supported task types and done statuses survive a save-and-load cycle.
+     *
+     * @throws Exception if temporary test data cannot be written or read
+     */
+    @Test
+    void saveAndLoad_mixedTasks_roundTripsTaskData() throws Exception {
+        Path dataFile = temporaryDirectory.resolve("nested").resolve("daddy.txt");
+        Storage storage = new Storage(dataFile, temporaryDirectory.resolve("duke.txt"));
+        TaskList savedTasks = new TaskList();
+        Task todo = new Todo("read book");
+        Task deadline = new Deadline("return book", LocalDateTime.of(2026, 12, 2, 18, 0));
+        Task event = new Event("meeting", LocalDateTime.of(2026, 12, 3, 14, 0),
+                LocalDateTime.of(2026, 12, 3, 16, 0));
+        deadline.markAsDone();
+        savedTasks.add(todo);
+        savedTasks.add(deadline);
+        savedTasks.add(event);
+
+        storage.save(savedTasks);
+        TaskList loadedTasks = new TaskList();
+        List<String> messages = storage.loadInto(loadedTasks);
+
+        assertTrue(messages.isEmpty());
+        assertEquals(List.of(
+                "T|0|read book",
+                "D|1|return book|2026-12-02T18:00",
+                "E|0|meeting|2026-12-03T14:00|2026-12-03T16:00"), Files.readAllLines(dataFile));
+        assertEquals(3, loadedTasks.size());
+        assertEquals("read book", taskAt(loadedTasks, 0).getDescription());
+        assertEquals("X", taskAt(loadedTasks, 1).getStatusIcon());
+        assertEquals("[D]", taskAt(loadedTasks, 1).getTypeIcon());
+        assertEquals("[E]", taskAt(loadedTasks, 2).getTypeIcon());
+    }
+
+    /**
+     * Verifies that loading with no data file leaves the supplied list unchanged.
+     */
+    @Test
+    void loadInto_noDataFiles_returnsNoMessagesAndLeavesListEmpty() {
+        Storage storage = new Storage(temporaryDirectory.resolve("daddy.txt"),
+                temporaryDirectory.resolve("duke.txt"));
+        TaskList tasks = new TaskList();
+
+        List<String> messages = storage.loadInto(tasks);
+
+        assertTrue(messages.isEmpty());
+        assertEquals(0, tasks.size());
+    }
+
+    /**
+     * Verifies that a legacy Duke data file is moved to the Daddy data file before loading.
+     *
+     * @throws IOException if the legacy data file cannot be created
+     */
+    @Test
+    void loadInto_onlyLegacyDataFileExists_movesFileAndLoadsTasks() throws IOException {
+        Path dataFile = temporaryDirectory.resolve("daddy.txt");
+        Path legacyDataFile = temporaryDirectory.resolve("duke.txt");
+        Files.write(legacyDataFile, List.of("T|1|keep me"));
+        Storage storage = new Storage(dataFile, legacyDataFile);
+        TaskList tasks = new TaskList();
+
+        List<String> messages = storage.loadInto(tasks);
+
+        assertTrue(Files.exists(dataFile));
+        assertFalse(Files.exists(legacyDataFile));
+        assertEquals(List.of("T|1|keep me"), Files.readAllLines(dataFile));
+        assertEquals(1, tasks.size());
+        assertEquals("X", taskAt(tasks, 0).getStatusIcon());
+        assertTrue(messages.getFirst().contains("moved your saved tasks"));
+    }
+
+    /**
+     * Verifies that malformed records are skipped while valid records and recovery files are preserved.
+     *
+     * @throws IOException if temporary test data cannot be written or read
+     */
+    @Test
+    void loadInto_corruptRecords_skipsRecordsAndCreatesRecoveryFiles() throws IOException {
+        Path dataFile = temporaryDirectory.resolve("daddy.txt");
+        List<String> originalRecords = List.of(
+                "T|1|keep me",
+                "BROKEN",
+                "D|0|return book|2026-12-02T18:00",
+                "E|x|bad");
+        Files.write(dataFile, originalRecords);
+        Storage storage = new Storage(dataFile, temporaryDirectory.resolve("duke.txt"));
+        TaskList tasks = new TaskList();
+
+        List<String> messages = storage.loadInto(tasks);
+
+        assertEquals(2, tasks.size());
+        assertEquals("keep me", taskAt(tasks, 0).getDescription());
+        assertEquals("return book", taskAt(tasks, 1).getDescription());
+        assertEquals(originalRecords, Files.readAllLines(temporaryDirectory.resolve("daddy.txt.backup")));
+        assertEquals(List.of("line 2: BROKEN", "line 4: E|x|bad"),
+                Files.readAllLines(temporaryDirectory.resolve("daddy.txt.corrupt")));
+        assertTrue(messages.stream().anyMatch(message -> message.contains("line 2")));
+        assertTrue(messages.stream().anyMatch(message -> message.contains("line 4")));
+    }
+
+    /**
+     * Returns the task at a zero-based list index.
+     *
+     * @param tasks the task list to inspect
+     * @param index the zero-based index to read
+     * @return the selected task
+     */
+    private Task taskAt(TaskList tasks, int index) {
+        List<Task> taskValues = new ArrayList<>();
+        for (Task task : tasks) {
+            taskValues.add(task);
+        }
+        return taskValues.get(index);
+    }
+}

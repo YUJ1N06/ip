@@ -42,3 +42,12 @@ After every code update:
 
 1. Review `test/ui-test-plan.md` and update it when the change adds or alters user-visible behavior.
 2. Invoke the project-specific `test-ui` skill to run the UI test plan and inspect the console transcript.
+
+## JUnit testing after code updates
+
+After every code update:
+
+1. Review and update the JUnit tests in `src/test/java` as needed.
+2. Maintain tests for approximately the top 50% highest-value methods, prioritizing complex, core, and
+   critical business logic. Test all reasonable scenarios for each selected method.
+3. Run `./gradlew test` and inspect the result before handing over the change.
