@@ -279,7 +279,8 @@ public class Parser {
                     + "keep track. Try: event meeting /from Mon 2pm /to 4pm.");
         }
         if (from.isEmpty() || to.isEmpty()) {
-            throw new DaddyException("An event needs both /from and /to times. Try: event meeting /from Mon 2pm /to 4pm");
+            throw new DaddyException("An event needs both /from and /to times. "
+                    + "Try: event meeting /from Mon 2pm /to 4pm");
         }
         try {
             return new Event(description, parseDateTime(from), parseDateTime(to));

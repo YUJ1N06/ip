@@ -67,7 +67,8 @@ class ParserTest {
         assertEquals("That deadline date needs dd-MM-yyyy or dd-MM-yyyy HHmm format. "
                         + "Try: deadline return book /by 02-12-2019 1800",
                 parseError(parser, "deadline return book /by tomorrow").getMessage());
-        assertEquals("Daddy has no clue what 'dance' means. Try todo, deadline, event, list, mark, unmark, delete, or bye.",
+        assertEquals("Daddy has no clue what 'dance' means. "
+                        + "Try todo, deadline, event, list, mark, unmark, delete, or bye.",
                 parseError(parser, "dance").getMessage());
     }
 
