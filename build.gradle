@@ -48,7 +48,8 @@ jar {
 }
 
 shadowJar {
-    archiveFileName = 'duke.jar'
+    // Produce one executable fat JAR with Daddy's runtime dependencies included.
+    archiveFileName = 'Daddy.jar'
 }
 
 run {
