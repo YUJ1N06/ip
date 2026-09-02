@@ -10,6 +10,7 @@ import daddy.command.AddCommand;
 import daddy.command.Command;
 import daddy.command.DeleteCommand;
 import daddy.command.ExitCommand;
+import daddy.command.FindCommand;
 import daddy.command.ListCommand;
 import daddy.command.ListOnDateCommand;
 import daddy.command.MarkCommand;
@@ -49,14 +50,17 @@ public class Parser {
         case TODO, DEADLINE, EVENT -> parseAddCommand(commandType, arguments);
         case MARK, UNMARK -> parseTaskStateCommand(commandType, arguments);
         case DELETE -> parseDeleteCommand(arguments);
+        case FIND -> parseFindCommand(arguments);
         case MARK_MISSING_ARGUMENT -> throw new DaddyException(
                 "MARK?! Mark what... Try: mark 1 (after adding a task first).");
         case UNMARK_MISSING_ARGUMENT -> throw new DaddyException(
                 "UNMARK?! Unmark what... Try: unmark 1 (after adding a task first).");
         case DELETE_MISSING_ARGUMENT -> throw new DaddyException(
                 "DELETE?! Delete what... Try: delete 1 (choose a task number first).");
+        case FIND_MISSING_ARGUMENT -> throw new DaddyException(
+                "FIND?! Find what... Try: find book.");
         case UNKNOWN -> throw new DaddyException("Daddy has no clue what '" + input
-                + "' means. Try todo, deadline, event, list, mark, unmark, delete, or bye.");
+                + "' means. Try todo, deadline, event, list, find, mark, unmark, delete, or bye.");
         };
     }
 
@@ -86,10 +90,14 @@ public class Parser {
             return CommandType.EVENT;
         } else if (input.equalsIgnoreCase("delete")) {
             return CommandType.DELETE_MISSING_ARGUMENT;
+        } else if (input.equalsIgnoreCase("find")) {
+            return CommandType.FIND_MISSING_ARGUMENT;
         } else if (lowerCaseInput.startsWith("unmark ")) {
             return CommandType.UNMARK;
         } else if (lowerCaseInput.startsWith("delete ")) {
             return CommandType.DELETE;
+        } else if (lowerCaseInput.startsWith("find ")) {
+            return CommandType.FIND;
         } else if (lowerCaseInput.startsWith("mark ")) {
             return CommandType.MARK;
         } else {
@@ -110,7 +118,7 @@ public class Parser {
         case TODO -> input.length() == 4 ? "" : input.substring(5).trim();
         case DEADLINE -> input.length() == 8 ? "" : input.substring(9).trim();
         case EVENT -> input.length() == 5 ? "" : input.substring(6).trim();
-        case MARK -> input.substring(5).trim();
+        case MARK, FIND -> input.substring(5).trim();
         case UNMARK, DELETE -> input.substring(7).trim();
         default -> "";
         };
@@ -200,6 +208,20 @@ public class Parser {
      */
     private Command parseDeleteCommand(String taskNumber) throws DaddyException {
         return new DeleteCommand(parseTaskIndex(taskNumber, "delete"));
+    }
+
+    /**
+     * Creates a command that finds tasks containing a keyword.
+     *
+     * @param keyword the description text to find
+     * @return a command that displays matching tasks
+     * @throws DaddyException if no keyword was supplied
+     */
+    private Command parseFindCommand(String keyword) throws DaddyException {
+        if (keyword.isEmpty()) {
+            throw new DaddyException("FIND?! Find what... Try: find book.");
+        }
+        return new FindCommand(keyword);
     }
 
     /**

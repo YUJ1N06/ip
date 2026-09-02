@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import daddy.command.AddCommand;
 import daddy.command.DeleteCommand;
 import daddy.command.ExitCommand;
+import daddy.command.FindCommand;
 import daddy.command.ListCommand;
 import daddy.command.ListOnDateCommand;
 import daddy.command.MarkCommand;
@@ -38,6 +39,7 @@ class ParserTest {
         assertInstanceOf(MarkCommand.class, parser.parseCommand("mark 1"));
         assertInstanceOf(UnmarkCommand.class, parser.parseCommand("unmark 1"));
         assertInstanceOf(DeleteCommand.class, parser.parseCommand("delete 1"));
+        assertInstanceOf(FindCommand.class, parser.parseCommand("find book"));
     }
 
     /**
@@ -53,6 +55,8 @@ class ParserTest {
                 parseError(parser, "unmark").getMessage());
         assertEquals("DELETE?! Delete what... Try: delete 1 (choose a task number first).",
                 parseError(parser, "delete").getMessage());
+        assertEquals("FIND?! Find what... Try: find book.",
+                parseError(parser, "find").getMessage());
     }
 
     /**
@@ -68,7 +72,7 @@ class ParserTest {
                         + "Try: deadline return book /by 02-12-2019 1800",
                 parseError(parser, "deadline return book /by tomorrow").getMessage());
         assertEquals("Daddy has no clue what 'dance' means. "
-                        + "Try todo, deadline, event, list, mark, unmark, delete, or bye.",
+                        + "Try todo, deadline, event, list, find, mark, unmark, delete, or bye.",
                 parseError(parser, "dance").getMessage());
     }
 
