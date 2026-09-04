@@ -45,22 +45,22 @@ public class Parser {
         CommandType commandType = getCommandType(input);
         String arguments = getArguments(input, commandType);
         return switch (commandType) {
-        case BYE -> new ExitCommand();
-        case LIST, LIST_ON -> parseListCommand(commandType, arguments);
-        case TODO, DEADLINE, EVENT -> parseAddCommand(commandType, arguments);
-        case MARK, UNMARK -> parseTaskStateCommand(commandType, arguments);
-        case DELETE -> parseDeleteCommand(arguments);
-        case FIND -> parseFindCommand(arguments);
-        case MARK_MISSING_ARGUMENT -> throw new DaddyException(
-                "MARK?! Mark what... Try: mark 1 (after adding a task first).");
-        case UNMARK_MISSING_ARGUMENT -> throw new DaddyException(
-                "UNMARK?! Unmark what... Try: unmark 1 (after adding a task first).");
-        case DELETE_MISSING_ARGUMENT -> throw new DaddyException(
-                "DELETE?! Delete what... Try: delete 1 (choose a task number first).");
-        case FIND_MISSING_ARGUMENT -> throw new DaddyException(
-                "FIND?! Find what... Try: find book.");
-        case UNKNOWN -> throw new DaddyException("Daddy has no clue what '" + input
-                + "' means. Try todo, deadline, event, list, find, mark, unmark, delete, or bye.");
+            case BYE -> new ExitCommand();
+            case LIST, LIST_ON -> parseListCommand(commandType, arguments);
+            case TODO, DEADLINE, EVENT -> parseAddCommand(commandType, arguments);
+            case MARK, UNMARK -> parseTaskStateCommand(commandType, arguments);
+            case DELETE -> parseDeleteCommand(arguments);
+            case FIND -> parseFindCommand(arguments);
+            case MARK_MISSING_ARGUMENT -> throw new DaddyException(
+                    "MARK?! Mark what... Try: mark 1 (after adding a task first).");
+            case UNMARK_MISSING_ARGUMENT -> throw new DaddyException(
+                    "UNMARK?! Unmark what... Try: unmark 1 (after adding a task first).");
+            case DELETE_MISSING_ARGUMENT -> throw new DaddyException(
+                    "DELETE?! Delete what... Try: delete 1 (choose a task number first).");
+            case FIND_MISSING_ARGUMENT -> throw new DaddyException(
+                    "FIND?! Find what... Try: find book.");
+            case UNKNOWN -> throw new DaddyException("Daddy has no clue what '" + input
+                    + "' means. Try todo, deadline, event, list, find, mark, unmark, delete, or bye.");
         };
     }
 
@@ -114,13 +114,13 @@ public class Parser {
      */
     private String getArguments(String input, CommandType commandType) {
         return switch (commandType) {
-        case LIST_ON -> input.substring(8).trim();
-        case TODO -> input.length() == 4 ? "" : input.substring(5).trim();
-        case DEADLINE -> input.length() == 8 ? "" : input.substring(9).trim();
-        case EVENT -> input.length() == 5 ? "" : input.substring(6).trim();
-        case MARK, FIND -> input.substring(5).trim();
-        case UNMARK, DELETE -> input.substring(7).trim();
-        default -> "";
+            case LIST_ON -> input.substring(8).trim();
+            case TODO -> input.length() == 4 ? "" : input.substring(5).trim();
+            case DEADLINE -> input.length() == 8 ? "" : input.substring(9).trim();
+            case EVENT -> input.length() == 5 ? "" : input.substring(6).trim();
+            case MARK, FIND -> input.substring(5).trim();
+            case UNMARK, DELETE -> input.substring(7).trim();
+            default -> "";
         };
     }
 
@@ -165,9 +165,9 @@ public class Parser {
      */
     private Command parseListCommand(CommandType commandType, String arguments) throws DaddyException {
         return switch (commandType) {
-        case LIST -> new ListCommand();
-        case LIST_ON -> new ListOnDateCommand(parseListDate(arguments));
-        default -> throw new IllegalArgumentException("command does not list tasks");
+            case LIST -> new ListCommand();
+            case LIST_ON -> new ListOnDateCommand(parseListDate(arguments));
+            default -> throw new IllegalArgumentException("command does not list tasks");
         };
     }
 
@@ -193,9 +193,9 @@ public class Parser {
      */
     private Command parseTaskStateCommand(CommandType commandType, String taskNumber) throws DaddyException {
         return switch (commandType) {
-        case MARK -> new MarkCommand(parseTaskIndex(taskNumber, "mark"));
-        case UNMARK -> new UnmarkCommand(parseTaskIndex(taskNumber, "unmark"));
-        default -> throw new IllegalArgumentException("command does not change task status");
+            case MARK -> new MarkCommand(parseTaskIndex(taskNumber, "mark"));
+            case UNMARK -> new UnmarkCommand(parseTaskIndex(taskNumber, "unmark"));
+            default -> throw new IllegalArgumentException("command does not change task status");
         };
     }
 
@@ -234,10 +234,10 @@ public class Parser {
      */
     private Task parseTask(CommandType commandType, String taskDetails) throws DaddyException {
         return switch (commandType) {
-        case TODO -> parseTodo(taskDetails);
-        case DEADLINE -> parseDeadline(taskDetails);
-        case EVENT -> parseEvent(taskDetails);
-        default -> throw new IllegalArgumentException("command does not create a task");
+            case TODO -> parseTodo(taskDetails);
+            case DEADLINE -> parseDeadline(taskDetails);
+            case EVENT -> parseEvent(taskDetails);
+            default -> throw new IllegalArgumentException("command does not create a task");
         };
     }
 

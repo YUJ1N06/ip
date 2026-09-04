@@ -140,25 +140,25 @@ public class Storage {
             throw new IllegalArgumentException("invalid task record");
         }
         return switch (fields[0]) {
-        case "T" -> {
-            if (fields.length != 3) {
-                throw new IllegalArgumentException("invalid todo record");
+            case "T" -> {
+                if (fields.length != 3) {
+                    throw new IllegalArgumentException("invalid todo record");
+                }
+                yield new Todo(fields[2]);
             }
-            yield new Todo(fields[2]);
-        }
-        case "D" -> {
-            if (fields.length != 4) {
-                throw new IllegalArgumentException("invalid deadline record");
+            case "D" -> {
+                if (fields.length != 4) {
+                    throw new IllegalArgumentException("invalid deadline record");
+                }
+                yield new Deadline(fields[2], LocalDateTime.parse(fields[3]));
             }
-            yield new Deadline(fields[2], LocalDateTime.parse(fields[3]));
-        }
-        case "E" -> {
-            if (fields.length != 5) {
-                throw new IllegalArgumentException("invalid event record");
+            case "E" -> {
+                if (fields.length != 5) {
+                    throw new IllegalArgumentException("invalid event record");
+                }
+                yield new Event(fields[2], LocalDateTime.parse(fields[3]), LocalDateTime.parse(fields[4]));
             }
-            yield new Event(fields[2], LocalDateTime.parse(fields[3]), LocalDateTime.parse(fields[4]));
-        }
-        default -> throw new IllegalArgumentException("unknown task type");
+            default -> throw new IllegalArgumentException("unknown task type");
         };
     }
 
@@ -172,10 +172,10 @@ public class Storage {
         String description = task.getDescription().replace("|", " ");
         String status = task.getStatusIcon().equals("X") ? "1" : "0";
         return switch (task.getType()) {
-        case TODO, GENERAL -> "T|" + status + "|" + description;
-        case DEADLINE -> "D|" + status + "|" + description + "|" + ((Deadline) task).getDeadline();
-        case EVENT -> "E|" + status + "|" + description + "|" + ((Event) task).getFrom()
-                + "|" + ((Event) task).getTo();
+            case TODO, GENERAL -> "T|" + status + "|" + description;
+            case DEADLINE -> "D|" + status + "|" + description + "|" + ((Deadline) task).getDeadline();
+            case EVENT -> "E|" + status + "|" + description + "|" + ((Event) task).getFrom()
+                    + "|" + ((Event) task).getTo();
         };
     }
 }
