@@ -1,0 +1,92 @@
+.root {
+    -fx-background-color: #f7f3eb;
+    -fx-font-family: "Avenir Next", "Helvetica Neue", sans-serif;
+}
+
+.header {
+    -fx-background-color: #253b35;
+    -fx-padding: 22 24 18 24;
+}
+
+.title {
+    -fx-text-fill: #fff9ef;
+    -fx-font-size: 27px;
+    -fx-font-weight: bold;
+}
+
+.subtitle {
+    -fx-text-fill: #c9d8ce;
+    -fx-font-size: 13px;
+}
+
+.conversation-scroll-pane {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.conversation-scroll-pane > .viewport {
+    -fx-background-color: transparent;
+}
+
+.dialog-container {
+    -fx-padding: 18;
+}
+
+.message-bubble {
+    -fx-background-radius: 16;
+    -fx-padding: 11 14 11 14;
+    -fx-font-family: "SF Mono", Menlo, monospace;
+    -fx-font-size: 12px;
+}
+
+.daddy-dialog .message-bubble {
+    -fx-background-color: #e3ece5;
+    -fx-text-fill: #1f312b;
+}
+
+.user-dialog .message-bubble {
+    -fx-background-color: #fde7b3;
+    -fx-text-fill: #44310d;
+}
+
+.avatar-placeholder {
+    -fx-min-width: 34;
+    -fx-min-height: 34;
+    -fx-pref-width: 34;
+    -fx-pref-height: 34;
+    -fx-max-width: 34;
+    -fx-max-height: 34;
+    -fx-background-radius: 17;
+    -fx-border-radius: 17;
+    -fx-border-width: 2;
+}
+
+.daddy-avatar {
+    -fx-background-color: #8db09c;
+    -fx-border-color: #507260;
+}
+
+.user-avatar {
+    -fx-background-color: #f3c96b;
+    -fx-border-color: #be8c2a;
+}
+
+.input-bar {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #ded8cb transparent transparent transparent;
+    -fx-padding: 14 18 14 18;
+}
+
+.command-input {
+    -fx-background-radius: 9;
+    -fx-border-radius: 9;
+    -fx-border-color: #c8d2c9;
+    -fx-padding: 9 11 9 11;
+}
+
+.send-button {
+    -fx-background-color: #253b35;
+    -fx-text-fill: #ffffff;
+    -fx-background-radius: 9;
+    -fx-padding: 9 16 9 16;
+}

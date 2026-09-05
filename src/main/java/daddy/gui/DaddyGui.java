@@ -1,32 +1,149 @@
 package daddy.gui;
 
+import java.util.Objects;
+
+import daddy.Daddy;
 import javafx.application.Application;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.layout.StackPane;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 /**
- * Provides the JavaFX window used to interact with Daddy.
+ * Provides the JavaFX chat window used to interact with Daddy.
  */
 public class DaddyGui extends Application {
+    /** Sets the initial width of Daddy's chat window. */
+    private static final double WINDOW_WIDTH = 560.0;
+    /** Sets the initial height of Daddy's chat window. */
+    private static final double WINDOW_HEIGHT = 700.0;
+    /** Processes commands and owns the task list for this graphical session. */
+    private final Daddy daddy;
+    /** Holds the conversation's ordered user and Daddy messages. */
+    private VBox dialogContainer;
+    /** Lets the user scroll through messages that no longer fit in the window. */
+    private ScrollPane scrollPane;
+    /** Accepts the next command entered by the user. */
+    private TextField userInput;
+    /** Submits the command currently shown in the user input field. */
+    private Button sendButton;
+
     /**
-     * Creates Daddy's JavaFX application.
+     * Creates Daddy's JavaFX application and its command engine.
      */
     public DaddyGui() {
+        this.daddy = new Daddy();
     }
 
     /**
-     * Creates and shows Daddy's initial application window.
+     * Creates and shows Daddy's graphical chat window.
      *
      * @param stage the primary JavaFX window
      */
     @Override
     public void start(Stage stage) {
-        Label message = new Label("Daddy's GUI is waking up...");
-        Scene scene = new Scene(new StackPane(message), 480, 640);
+        dialogContainer = new VBox(12.0);
+        dialogContainer.getStyleClass().add("dialog-container");
+
+        scrollPane = new ScrollPane(dialogContainer);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        scrollPane.getStyleClass().add("conversation-scroll-pane");
+
+        userInput = new TextField();
+        userInput.setPromptText("Try: todo borrow book");
+        userInput.getStyleClass().add("command-input");
+
+        sendButton = new Button("Send");
+        sendButton.getStyleClass().add("send-button");
+
+        HBox inputBar = new HBox(10.0, userInput, sendButton);
+        inputBar.getStyleClass().add("input-bar");
+        HBox.setHgrow(userInput, Priority.ALWAYS);
+
+        BorderPane mainLayout = new BorderPane();
+        mainLayout.setTop(createHeader());
+        mainLayout.setCenter(scrollPane);
+        mainLayout.setBottom(inputBar);
+
+        Scene scene = new Scene(mainLayout, WINDOW_WIDTH, WINDOW_HEIGHT);
+        scene.getStylesheets().add(Objects.requireNonNull(
+                getClass().getResource("/styles/daddy.css")).toExternalForm());
+
+        configureInputHandlers();
+        dialogContainer.heightProperty().addListener((observable) -> scrollPane.setVvalue(1.0));
+        addDaddyDialog(daddy.getWelcomeMessage());
+
         stage.setTitle("Daddy");
+        stage.setMinWidth(WINDOW_WIDTH);
+        stage.setMinHeight(WINDOW_HEIGHT);
         stage.setScene(scene);
         stage.show();
+    }
+
+    /**
+     * Creates the heading displayed above Daddy's conversation.
+     *
+     * @return the styled heading area
+     */
+    private VBox createHeader() {
+        Label title = new Label("Daddy");
+        title.getStyleClass().add("title");
+        Label subtitle = new Label("Task wrangler · type a command to begin");
+        subtitle.getStyleClass().add("subtitle");
+        VBox header = new VBox(2.0, title, subtitle);
+        header.getStyleClass().add("header");
+        return header;
+    }
+
+    /**
+     * Connects the Send button and Enter key to command submission.
+     */
+    private void configureInputHandlers() {
+        sendButton.setOnAction(event -> handleUserInput());
+        userInput.setOnAction(event -> handleUserInput());
+    }
+
+    /**
+     * Adds the entered command and Daddy's response to the conversation.
+     */
+    private void handleUserInput() {
+        String userText = userInput.getText().trim();
+        if (userText.isEmpty()) {
+            return;
+        }
+
+        addUserDialog(userText);
+        addDaddyDialog(daddy.getResponse(userText));
+        userInput.clear();
+
+        if (daddy.isExitRequested()) {
+            userInput.setDisable(true);
+            sendButton.setDisable(true);
+        }
+    }
+
+    /**
+     * Adds one right-aligned dialog for a user-entered command.
+     *
+     * @param text the command entered by the user
+     */
+    private void addUserDialog(String text) {
+        dialogContainer.getChildren().add(DialogBox.forUser(text));
+    }
+
+    /**
+     * Adds one left-aligned dialog for Daddy's response.
+     *
+     * @param text the response generated by Daddy
+     */
+    private void addDaddyDialog(String text) {
+        dialogContainer.getChildren().add(DialogBox.forDaddy(text));
     }
 }
