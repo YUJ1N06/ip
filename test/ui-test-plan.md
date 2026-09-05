@@ -4,7 +4,7 @@ The test runner compares stdout exactly, after normalizing CRLF line endings.
 Compile the application first with Java 25:
 
 ```bash
-javac -d /tmp/daddy-classes $(find src/main/java -name '*.java')
+javac -d /tmp/daddy-classes $(find src/main/java -name '*.java' ! -path '*/gui/*' ! -name 'Launcher.java')
 ```
 
 ## Manual test: date and time parsing
