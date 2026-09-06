@@ -26,8 +26,7 @@ class TaskListTest {
         Task firstTask = new Todo("read book");
         Task secondTask = new Todo("return book");
 
-        tasks.add(firstTask);
-        tasks.add(secondTask);
+        tasks.add(firstTask, secondTask);
 
         assertEquals(2, tasks.size());
         assertEquals(List.of(firstTask, secondTask), asList(tasks));
