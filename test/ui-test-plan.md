@@ -4,8 +4,21 @@ The test runner compares stdout exactly, after normalizing CRLF line endings.
 Compile the application first with Java 25:
 
 ```bash
-javac -d /tmp/daddy-classes $(find src/main/java -name '*.java')
+javac -d /tmp/daddy-classes $(find src/main/java -name '*.java' ! -path '*/gui/*' ! -name 'Launcher.java')
 ```
+
+## Manual test: JavaFX command conversation
+Aim: Verify that the graphical interface sends the same commands to Daddy's existing command engine and presents
+its responses cleanly.
+
+Run `./gradlew run`, then enter `todo read book`, `mark 1`, `find book`, and `bye` in the command field.
+
+The window should show each entered command on the right and Daddy's command responses on the left. The graphical
+header should show compact white ASCII art without wrapping it and use the baby-pink theme. The greeting and
+command responses should omit command-line-only divider lines. A plain `list` command should display a graphical
+task panel with status, task type, description, and date details rather than console-style task text.
+After `bye`, the command field and Send button should be disabled. The circular avatar placeholders are intentionally
+blank until image assets are supplied.
 
 ## Manual test: date and time parsing
 Aim: Verify that deadlines and events parse ISO dates/times and display friendly values.

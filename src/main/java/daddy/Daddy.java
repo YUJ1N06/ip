@@ -1,82 +1,155 @@
 package daddy;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
 
 import daddy.command.Command;
 import daddy.exception.DaddyException;
 import daddy.parser.Parser;
 import daddy.storage.Storage;
+import daddy.task.Task;
 import daddy.task.TaskList;
 import daddy.ui.Ui;
 
 /**
- * Starts Daddy and coordinates command parsing, task storage, and console interaction.
+ * Coordinates Daddy's commands, task storage, and presentation interfaces.
  */
 public class Daddy {
     /** Stores the tasks available during the current application session. */
-    private static final TaskList tasks = new TaskList();
+    private final TaskList tasks;
     /** Saves tasks in the current file and migrates tasks from the legacy file when needed. */
-    private static final Storage storage = new Storage(
-            Path.of("data", "daddy.txt"), Path.of("data", "duke.txt"));
-    /** Reads commands and displays all messages for the user. */
-    private static final Ui ui = new Ui();
+    private final Storage storage;
     /** Converts user-entered command text into executable commands. */
-    private static final Parser parser = new Parser();
+    private final Parser parser;
+    /** Stores messages produced while loading saved tasks. */
+    private final List<String> loadingMessages;
+    /** Records whether the user has entered the command that ends this session. */
+    private boolean isExitRequested;
 
-    /** Prevents instantiation because this class only contains application entry-point methods. */
-    private Daddy() {
+    /**
+     * Creates Daddy using the standard project-relative task data files.
+     */
+    public Daddy() {
+        this(new Storage(Path.of("data", "daddy.txt"), Path.of("data", "duke.txt")));
     }
 
     /**
-     * Starts the Daddy command-line application.
+     * Creates Daddy using supplied storage, primarily for alternate interfaces and tests.
+     *
+     * @param storage the storage used to load and save tasks
+     */
+    public Daddy(Storage storage) {
+        this.tasks = new TaskList();
+        this.storage = storage;
+        this.parser = new Parser();
+        this.loadingMessages = List.copyOf(storage.loadInto(tasks));
+        this.isExitRequested = false;
+    }
+
+    /**
+     * Starts Daddy's command-line application.
      *
      * @param args command-line arguments, which Daddy does not use
      */
     public static void main(String[] args) {
-        ui.showGreeting();
-        loadTasks();
-        runChatLoop();
+        Daddy daddy = new Daddy();
+        Ui ui = new Ui();
+        daddy.showWelcome(ui);
+        daddy.runChatLoop(ui);
     }
 
     /**
-     * Repeatedly reads and executes commands until an exit command is received.
+     * Returns the welcome and loading messages for a graphical conversation.
+     *
+     * @return the formatted welcome and loading messages
      */
-    private static void runChatLoop() {
-        while (true) {
-            String input = ui.readCommand();
+    public String getWelcomeMessage() {
+        return captureOutput(this::showWelcome);
+    }
 
-            try {
-                Command command = parser.parseCommand(input);
-                if (execute(command)) {
-                    break;
-                }
-            } catch (DaddyException exception) {
-                ui.showError(exception.getMessage());
-            }
+    /**
+     * Processes one user command and returns Daddy's formatted response.
+     *
+     * @param input the complete command entered by the user
+     * @return the response produced for the command
+     */
+    public String getResponse(String input) {
+        return captureOutput(ui -> processCommand(input, ui));
+    }
+
+    /**
+     * Returns whether the user has entered the command that ends this session.
+     *
+     * @return whether an exit command has been processed
+     */
+    public boolean isExitRequested() {
+        return isExitRequested;
+    }
+
+    /**
+     * Returns the current tasks for a graphical interface to present.
+     *
+     * @return an unmodifiable snapshot of the current tasks in list order
+     */
+    public List<Task> getTasks() {
+        List<Task> taskSnapshot = new ArrayList<>();
+        for (Task task : tasks) {
+            taskSnapshot.add(task);
         }
+        return List.copyOf(taskSnapshot);
+    }
 
+    /**
+     * Repeatedly reads and processes console commands until an exit command is received.
+     *
+     * @param ui the console interface used to read and display messages
+     */
+    private void runChatLoop(Ui ui) {
+        while (!isExitRequested) {
+            processCommand(ui.readCommand(), ui);
+        }
         ui.close();
     }
 
     /**
-     * Executes a command object using Daddy's collaborating objects.
+     * Displays the greeting and any task-loading messages through an interface.
      *
-     * @param command the command to execute
-     * @return whether the command ends the chat session
-     * @throws DaddyException if the command cannot be completed
+     * @param ui the interface used to display startup messages
      */
-    private static boolean execute(Command command) throws DaddyException {
-        command.execute(tasks, ui, storage);
-        return command.isExit();
-    }
-
-    /**
-     * Loads saved tasks and displays any loading or migration messages.
-     */
-    private static void loadTasks() {
-        for (String message : storage.loadInto(tasks)) {
+    private void showWelcome(Ui ui) {
+        ui.showGreeting();
+        for (String message : loadingMessages) {
             ui.showError(message);
         }
     }
 
+    /**
+     * Parses and executes one command, displaying a user-friendly error when necessary.
+     *
+     * @param input the complete command entered by the user
+     * @param ui the interface used to display the command response
+     */
+    private void processCommand(String input, Ui ui) {
+        try {
+            Command command = parser.parseCommand(input);
+            command.execute(tasks, ui, storage);
+            isExitRequested = command.isExit();
+        } catch (DaddyException exception) {
+            ui.showError(exception.getMessage());
+        }
+    }
+
+    /**
+     * Captures messages shown through a temporary interface as one multi-line response.
+     *
+     * @param action the work that produces messages using the temporary interface
+     * @return the captured response lines joined by the system line separator
+     */
+    private String captureOutput(Consumer<Ui> action) {
+        List<String> lines = new ArrayList<>();
+        action.accept(new Ui(lines::add));
+        return String.join(System.lineSeparator(), lines);
+    }
 }

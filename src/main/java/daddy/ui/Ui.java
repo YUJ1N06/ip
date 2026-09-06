@@ -3,6 +3,7 @@ package daddy.ui;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Scanner;
+import java.util.function.Consumer;
 
 import daddy.task.Task;
 import daddy.task.TaskList;
@@ -17,10 +18,27 @@ public class Ui {
     private static final String DIVIDER = "____________________________________________________________";
     /** Reads commands entered through standard input. */
     private final Scanner scanner;
+    /** Receives each complete line that Daddy displays. */
+    private final Consumer<String> output;
+    /** Determines whether console-only decorations and indentation should be displayed. */
+    private final boolean usesConsoleFormatting;
 
     /** Creates a user interface that reads commands from standard input. */
     public Ui() {
         this.scanner = new Scanner(System.in);
+        this.output = System.out::println;
+        this.usesConsoleFormatting = true;
+    }
+
+    /**
+     * Creates an interface that sends displayed lines to a supplied output receiver.
+     *
+     * @param output the receiver for each complete displayed line
+     */
+    public Ui(Consumer<String> output) {
+        this.scanner = null;
+        this.output = output;
+        this.usesConsoleFormatting = false;
     }
 
     /**
@@ -29,12 +47,17 @@ public class Ui {
      * @return the complete command line
      */
     public String readCommand() {
+        if (scanner == null) {
+            throw new IllegalStateException("this UI does not read console commands");
+        }
         return scanner.nextLine();
     }
 
     /** Releases the input stream used by this interface. */
     public void close() {
-        scanner.close();
+        if (scanner != null) {
+            scanner.close();
+        }
     }
 
     /** Displays Daddy's greeting banner. */
@@ -45,10 +68,12 @@ public class Ui {
                 + "| | | || (_| || (_| | | (_| | | |_| |\n"
                 + "| |_| | \\__,_| \\__,_|  \\__,_|  \\__, |\n"
                 + "|____/                          |___/ \n";
-        printDivider();
-        printIndentedBanner(banner);
-        System.out.println(INDENT + "Hello, little one.");
-        System.out.println(INDENT + "What can I assist you with today ;)?");
+        if (usesConsoleFormatting) {
+            printDivider();
+            printIndentedBanner(banner);
+        }
+        printLine(INDENT + "Hello, little one.");
+        printLine(INDENT + "What can I assist you with today ;)?");
         printDivider();
     }
 
@@ -59,10 +84,10 @@ public class Ui {
      */
     public void showTaskList(TaskList tasks) {
         printDivider();
-        System.out.println(INDENT + " Here are the tasks in your list:");
+        printLine(INDENT + " Here are the tasks in your list:");
         int taskNumber = 1;
         for (Task task : tasks) {
-            System.out.println(INDENT + " " + taskNumber + "." + task.getTypeIcon()
+            printLine(INDENT + " " + taskNumber + "." + task.getTypeIcon()
                     + "[" + task.getStatusIcon() + "] " + task.getDisplayDescription());
             taskNumber++;
         }
@@ -77,15 +102,15 @@ public class Ui {
      */
     public void showTasksOnDate(LocalDate date, List<Task> tasks) {
         printDivider();
-        System.out.println(INDENT + " Tasks occurring on " + date + ":");
+        printLine(INDENT + " Tasks occurring on " + date + ":");
         int displayedTaskNumber = 1;
         for (Task task : tasks) {
-            System.out.println(INDENT + " " + displayedTaskNumber + "." + task.getTypeIcon()
+            printLine(INDENT + " " + displayedTaskNumber + "." + task.getTypeIcon()
                     + "[" + task.getStatusIcon() + "] " + task.getDisplayDescription());
             displayedTaskNumber++;
         }
         if (displayedTaskNumber == 1) {
-            System.out.println(INDENT + " No deadlines or events found for that date.");
+            printLine(INDENT + " No deadlines or events found for that date.");
         }
         printDivider();
     }
@@ -97,15 +122,15 @@ public class Ui {
      */
     public void showMatchingTasks(List<Task> tasks) {
         printDivider();
-        System.out.println(INDENT + " Here are the matching tasks in your list:");
+        printLine(INDENT + " Here are the matching tasks in your list:");
         int displayedTaskNumber = 1;
         for (Task task : tasks) {
-            System.out.println(INDENT + " " + displayedTaskNumber + "." + task.getTypeIcon()
+            printLine(INDENT + " " + displayedTaskNumber + "." + task.getTypeIcon()
                     + "[" + task.getStatusIcon() + "] " + task.getDisplayDescription());
             displayedTaskNumber++;
         }
         if (displayedTaskNumber == 1) {
-            System.out.println(INDENT + " No matching tasks found.");
+            printLine(INDENT + " No matching tasks found.");
         }
         printDivider();
     }
@@ -118,10 +143,10 @@ public class Ui {
      */
     public void showTaskAdded(Task task, int taskCount) {
         printDivider();
-        System.out.println(INDENT + " Got it. I've added this task:");
-        System.out.println(INDENT + "   " + task.getTypeIcon() + "["
+        printLine(INDENT + " Got it. I've added this task:");
+        printLine(INDENT + "   " + task.getTypeIcon() + "["
                 + task.getStatusIcon() + "] " + task.getDisplayDescription());
-        System.out.println(INDENT + " Now you have " + taskCount + " tasks in the list.");
+        printLine(INDENT + " Now you have " + taskCount + " tasks in the list.");
         printDivider();
     }
 
@@ -132,8 +157,8 @@ public class Ui {
      */
     public void showTaskMarked(Task task) {
         printDivider();
-        System.out.println(INDENT + " Nice! I've marked this task as done:");
-        System.out.println(INDENT + "   [X] " + task.getDisplayDescription());
+        printLine(INDENT + " Nice! I've marked this task as done:");
+        printLine(INDENT + "   [X] " + task.getDisplayDescription());
         printDivider();
     }
 
@@ -144,8 +169,8 @@ public class Ui {
      */
     public void showTaskUnmarked(Task task) {
         printDivider();
-        System.out.println(INDENT + " OK, I've marked this task as not done yet:");
-        System.out.println(INDENT + "   [ ] " + task.getDisplayDescription());
+        printLine(INDENT + " OK, I've marked this task as not done yet:");
+        printLine(INDENT + "   [ ] " + task.getDisplayDescription());
         printDivider();
     }
 
@@ -157,10 +182,10 @@ public class Ui {
      */
     public void showTaskDeleted(Task task, int taskCount) {
         printDivider();
-        System.out.println(INDENT + " Noted. I've removed this task:");
-        System.out.println(INDENT + "   " + task.getTypeIcon() + "[" + task.getStatusIcon()
+        printLine(INDENT + " Noted. I've removed this task:");
+        printLine(INDENT + "   " + task.getTypeIcon() + "[" + task.getStatusIcon()
                 + "] " + task.getDisplayDescription());
-        System.out.println(INDENT + " Now you have " + taskCount + " tasks in the list.");
+        printLine(INDENT + " Now you have " + taskCount + " tasks in the list.");
         printDivider();
     }
 
@@ -171,19 +196,21 @@ public class Ui {
      */
     public void showError(String message) {
         printDivider();
-        System.out.println(INDENT + " " + message);
+        printLine(INDENT + " " + message);
         printDivider();
     }
 
     /** Displays Daddy's farewell message. */
     public void showExit() {
-        System.out.println(INDENT + "Bye. See you soon :)");
+        printLine(INDENT + "Bye. See you soon :)");
         printDivider();
     }
 
     /** Prints a divider line with the standard indentation. */
     private void printDivider() {
-        System.out.println(INDENT + DIVIDER);
+        if (usesConsoleFormatting) {
+            printLine(INDENT + DIVIDER);
+        }
     }
 
     /**
@@ -193,7 +220,29 @@ public class Ui {
      */
     private void printIndentedBanner(String banner) {
         for (String line : banner.split("\\n")) {
-            System.out.println(INDENT + line);
+            printLine(INDENT + line);
         }
+    }
+
+    /**
+     * Sends one complete output line through this interface's configured receiver.
+     *
+     * @param line the line to display
+     */
+    private void printLine(String line) {
+        output.accept(removeConsoleIndent(line));
+    }
+
+    /**
+     * Removes console-only leading indentation from a graphical interface message.
+     *
+     * @param line the interface message before graphical formatting is applied
+     * @return the original console line or the graphical version without leading indentation
+     */
+    private String removeConsoleIndent(String line) {
+        if (usesConsoleFormatting || !line.startsWith(INDENT)) {
+            return line;
+        }
+        return line.substring(INDENT.length());
     }
 }
