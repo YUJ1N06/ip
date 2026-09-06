@@ -2,6 +2,7 @@ package daddy.task;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -19,12 +20,12 @@ public class TaskList implements Iterable<Task> {
     }
 
     /**
-     * Adds a task to the end of the list.
+     * Adds one or more tasks to the end of the list in the supplied order.
      *
-     * @param task the task to add
+     * @param tasksToAdd the tasks to add
      */
-    public void add(Task task) {
-        tasks.add(task);
+    public void add(Task... tasksToAdd) {
+        Collections.addAll(tasks, tasksToAdd);
     }
 
     /**
