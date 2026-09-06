@@ -1,14 +1,18 @@
 package daddy;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.file.Path;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import daddy.storage.Storage;
+import daddy.task.Task;
 
 /**
  * Tests Daddy's command-response API used by the graphical interface.
@@ -38,5 +42,35 @@ class DaddyTest {
 
         assertTrue(exitResponse.contains("Bye. See you soon :)"));
         assertTrue(daddy.isExitRequested());
+    }
+
+    /** Verifies that the graphical greeting excludes console-only art and dividers. */
+    @Test
+    void getWelcomeMessage_graphicalInterface_returnsCleanGreeting() {
+        Storage storage = new Storage(temporaryDirectory.resolve("daddy.txt"),
+                temporaryDirectory.resolve("duke.txt"));
+        Daddy daddy = new Daddy(storage);
+
+        String welcomeMessage = daddy.getWelcomeMessage();
+
+        assertTrue(welcomeMessage.contains("Hello, little one."));
+        assertTrue(welcomeMessage.contains("What can I assist you with today ;)?"));
+        assertFalse(welcomeMessage.contains("____"));
+        assertFalse(welcomeMessage.contains("|  _"));
+    }
+
+    /** Verifies that the graphical interface can read an immutable task-list snapshot. */
+    @Test
+    void getTasks_afterAddingTask_returnsCurrentImmutableSnapshot() {
+        Storage storage = new Storage(temporaryDirectory.resolve("daddy.txt"),
+                temporaryDirectory.resolve("duke.txt"));
+        Daddy daddy = new Daddy(storage);
+        daddy.getResponse("todo read book");
+
+        List<Task> tasks = daddy.getTasks();
+
+        assertEquals(1, tasks.size());
+        assertEquals("read book", tasks.get(0).getDescription());
+        assertThrows(UnsupportedOperationException.class, () -> tasks.add(tasks.get(0)));
     }
 }

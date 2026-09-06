@@ -20,11 +20,14 @@ public class Ui {
     private final Scanner scanner;
     /** Receives each complete line that Daddy displays. */
     private final Consumer<String> output;
+    /** Determines whether console-only decorations and indentation should be displayed. */
+    private final boolean usesConsoleFormatting;
 
     /** Creates a user interface that reads commands from standard input. */
     public Ui() {
         this.scanner = new Scanner(System.in);
         this.output = System.out::println;
+        this.usesConsoleFormatting = true;
     }
 
     /**
@@ -35,6 +38,7 @@ public class Ui {
     public Ui(Consumer<String> output) {
         this.scanner = null;
         this.output = output;
+        this.usesConsoleFormatting = false;
     }
 
     /**
@@ -64,8 +68,10 @@ public class Ui {
                 + "| | | || (_| || (_| | | (_| | | |_| |\n"
                 + "| |_| | \\__,_| \\__,_|  \\__,_|  \\__, |\n"
                 + "|____/                          |___/ \n";
-        printDivider();
-        printIndentedBanner(banner);
+        if (usesConsoleFormatting) {
+            printDivider();
+            printIndentedBanner(banner);
+        }
         printLine(INDENT + "Hello, little one.");
         printLine(INDENT + "What can I assist you with today ;)?");
         printDivider();
@@ -202,7 +208,9 @@ public class Ui {
 
     /** Prints a divider line with the standard indentation. */
     private void printDivider() {
-        printLine(INDENT + DIVIDER);
+        if (usesConsoleFormatting) {
+            printLine(INDENT + DIVIDER);
+        }
     }
 
     /**
@@ -222,6 +230,19 @@ public class Ui {
      * @param line the line to display
      */
     private void printLine(String line) {
-        output.accept(line);
+        output.accept(removeConsoleIndent(line));
+    }
+
+    /**
+     * Removes console-only leading indentation from a graphical interface message.
+     *
+     * @param line the interface message before graphical formatting is applied
+     * @return the original console line or the graphical version without leading indentation
+     */
+    private String removeConsoleIndent(String line) {
+        if (usesConsoleFormatting || !line.startsWith(INDENT)) {
+            return line;
+        }
+        return line.substring(INDENT.length());
     }
 }

@@ -9,6 +9,7 @@ import daddy.command.Command;
 import daddy.exception.DaddyException;
 import daddy.parser.Parser;
 import daddy.storage.Storage;
+import daddy.task.Task;
 import daddy.task.TaskList;
 import daddy.ui.Ui;
 
@@ -85,6 +86,19 @@ public class Daddy {
      */
     public boolean isExitRequested() {
         return isExitRequested;
+    }
+
+    /**
+     * Returns the current tasks for a graphical interface to present.
+     *
+     * @return an unmodifiable snapshot of the current tasks in list order
+     */
+    public List<Task> getTasks() {
+        List<Task> taskSnapshot = new ArrayList<>();
+        for (Task task : tasks) {
+            taskSnapshot.add(task);
+        }
+        return List.copyOf(taskSnapshot);
     }
 
     /**

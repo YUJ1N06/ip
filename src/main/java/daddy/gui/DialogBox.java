@@ -10,7 +10,7 @@ import javafx.scene.layout.Region;
  */
 public class DialogBox extends HBox {
     /** Limits the width of a message bubble so long text remains readable. */
-    private static final double MAX_BUBBLE_WIDTH = 340.0;
+    private static final double MAX_BUBBLE_WIDTH = 440.0;
 
     /**
      * Creates a chat message aligned for either the user or Daddy.

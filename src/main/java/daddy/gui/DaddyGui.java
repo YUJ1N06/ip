@@ -1,8 +1,10 @@
 package daddy.gui;
 
+import java.util.List;
 import java.util.Objects;
 
 import daddy.Daddy;
+import daddy.task.Task;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -23,6 +25,13 @@ public class DaddyGui extends Application {
     private static final double WINDOW_WIDTH = 560.0;
     /** Sets the initial height of Daddy's chat window. */
     private static final double WINDOW_HEIGHT = 700.0;
+    /** Provides Daddy's decorative banner in a shape that fits within the graphical header. */
+    private static final String ASCII_ART = " ____              _       _               \n"
+            + "|  _ \\   __ _   __| |   __| |  _   _ \n"
+            + "| | | | / _` | / _` |  / _` | | | | |\n"
+            + "| | | || (_| || (_| | | (_| | | |_| |\n"
+            + "| |_| | \\__,_| \\__,_|  \\__,_|  \\__, |\n"
+            + "|____/                          |___/ ";
     /** Processes commands and owns the task list for this graphical session. */
     private final Daddy daddy;
     /** Holds the conversation's ordered user and Daddy messages. */
@@ -93,11 +102,11 @@ public class DaddyGui extends Application {
      * @return the styled heading area
      */
     private VBox createHeader() {
-        Label title = new Label("Daddy");
-        title.getStyleClass().add("title");
         Label subtitle = new Label("Task wrangler · type a command to begin");
         subtitle.getStyleClass().add("subtitle");
-        VBox header = new VBox(2.0, title, subtitle);
+        Label asciiArt = new Label(ASCII_ART);
+        asciiArt.getStyleClass().add("header-ascii-art");
+        VBox header = new VBox(4.0, asciiArt, subtitle);
         header.getStyleClass().add("header");
         return header;
     }
@@ -120,7 +129,12 @@ public class DaddyGui extends Application {
         }
 
         addUserDialog(userText);
-        addDaddyDialog(daddy.getResponse(userText));
+        String response = daddy.getResponse(userText);
+        if (isListCommand(userText)) {
+            addTaskList(daddy.getTasks());
+        } else {
+            addDaddyDialog(response);
+        }
         userInput.clear();
 
         if (daddy.isExitRequested()) {
@@ -145,5 +159,24 @@ public class DaddyGui extends Application {
      */
     private void addDaddyDialog(String text) {
         dialogContainer.getChildren().add(DialogBox.forDaddy(text));
+    }
+
+    /**
+     * Determines whether a command requests the complete task list.
+     *
+     * @param command the user-entered command text
+     * @return whether the command is the plain {@code list} command
+     */
+    private boolean isListCommand(String command) {
+        return command.equalsIgnoreCase("list");
+    }
+
+    /**
+     * Adds a graphical panel that presents all current tasks as individual cards.
+     *
+     * @param tasks the tasks to present in the panel
+     */
+    private void addTaskList(List<Task> tasks) {
+        dialogContainer.getChildren().add(new TaskListView(tasks));
     }
 }

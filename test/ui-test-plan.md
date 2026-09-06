@@ -8,11 +8,15 @@ javac -d /tmp/daddy-classes $(find src/main/java -name '*.java' ! -path '*/gui/*
 ```
 
 ## Manual test: JavaFX command conversation
-Aim: Verify that the graphical interface sends the same commands to Daddy's existing command engine.
+Aim: Verify that the graphical interface sends the same commands to Daddy's existing command engine and presents
+its responses cleanly.
 
 Run `./gradlew run`, then enter `todo read book`, `mark 1`, `find book`, and `bye` in the command field.
 
-The window should show each entered command on the right and Daddy's existing formatted responses on the left.
+The window should show each entered command on the right and Daddy's command responses on the left. The graphical
+header should show compact white ASCII art without wrapping it and use the baby-pink theme. The greeting and
+command responses should omit command-line-only divider lines. A plain `list` command should display a graphical
+task panel with status, task type, description, and date details rather than console-style task text.
 After `bye`, the command field and Send button should be disabled. The circular avatar placeholders are intentionally
 blank until image assets are supplied.
 
