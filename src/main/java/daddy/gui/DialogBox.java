@@ -1,16 +1,27 @@
 package daddy.gui;
 
+import java.util.Objects;
+
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
+import javafx.scene.shape.Circle;
 
 /**
- * Displays one chat message with a blank avatar placeholder.
+ * Displays one chat message with its speaker's profile avatar.
  */
 public class DialogBox extends HBox {
     /** Limits the width of a message bubble so long text remains readable. */
     private static final double MAX_BUBBLE_WIDTH = 440.0;
+    /** Sets the width and height of each circular profile avatar. */
+    private static final double AVATAR_SIZE = 52.0;
+    /** Identifies Daddy Noel's packaged profile image. */
+    private static final String DADDY_AVATAR_RESOURCE = "/images/daddy-noel.jpeg";
+    /** Identifies My Little Pony's packaged profile image. */
+    private static final String USER_AVATAR_RESOURCE = "/images/my-lil-pony.png";
 
     /**
      * Creates a chat message aligned for either the user or Daddy.
@@ -24,17 +35,16 @@ public class DialogBox extends HBox {
         message.setMaxWidth(MAX_BUBBLE_WIDTH);
         message.getStyleClass().add("message-bubble");
 
-        Region avatarPlaceholder = new Region();
-        avatarPlaceholder.getStyleClass().addAll("avatar-placeholder", isUser ? "user-avatar" : "daddy-avatar");
+        StackPane avatar = createAvatar(isUser);
 
         setSpacing(10.0);
         getStyleClass().add(isUser ? "user-dialog" : "daddy-dialog");
         if (isUser) {
             setAlignment(Pos.TOP_RIGHT);
-            getChildren().addAll(message, avatarPlaceholder);
+            getChildren().addAll(message, avatar);
         } else {
             setAlignment(Pos.TOP_LEFT);
-            getChildren().addAll(avatarPlaceholder, message);
+            getChildren().addAll(avatar, message);
         }
     }
 
@@ -56,5 +66,57 @@ public class DialogBox extends HBox {
      */
     public static DialogBox forDaddy(String text) {
         return new DialogBox(text, false);
+    }
+
+    /**
+     * Creates a cover-scaled profile image clipped to a circle with a colored outline.
+     *
+     * @param isUser whether the avatar belongs to the user
+     * @return the circular avatar container
+     */
+    private StackPane createAvatar(boolean isUser) {
+        Image image = loadAvatarImage(isUser ? USER_AVATAR_RESOURCE : DADDY_AVATAR_RESOURCE);
+        ImageView avatarImage = new ImageView(image);
+        fitImageToAvatar(avatarImage, image);
+
+        double avatarRadius = AVATAR_SIZE / 2.0;
+        StackPane clippedImage = new StackPane(avatarImage);
+        clippedImage.setMinSize(AVATAR_SIZE, AVATAR_SIZE);
+        clippedImage.setPrefSize(AVATAR_SIZE, AVATAR_SIZE);
+        clippedImage.setMaxSize(AVATAR_SIZE, AVATAR_SIZE);
+        clippedImage.setClip(new Circle(avatarRadius, avatarRadius, avatarRadius));
+
+        Circle outline = new Circle(avatarRadius - 1.0);
+        outline.getStyleClass().addAll("avatar-outline", isUser ? "user-avatar-outline" : "daddy-avatar-outline");
+        StackPane avatar = new StackPane(clippedImage, outline);
+        avatar.setMinSize(AVATAR_SIZE, AVATAR_SIZE);
+        avatar.setPrefSize(AVATAR_SIZE, AVATAR_SIZE);
+        avatar.setMaxSize(AVATAR_SIZE, AVATAR_SIZE);
+        return avatar;
+    }
+
+    /**
+     * Loads one profile image from Daddy's packaged resources.
+     *
+     * @param resourcePath the absolute resource path for the profile image
+     * @return the loaded profile image
+     */
+    private Image loadAvatarImage(String resourcePath) {
+        return new Image(Objects.requireNonNull(getClass().getResource(resourcePath)).toExternalForm());
+    }
+
+    /**
+     * Scales an image so it covers the avatar circle without distorting its proportions.
+     *
+     * @param avatarImage the image view to size
+     * @param image the image displayed by the view
+     */
+    private void fitImageToAvatar(ImageView avatarImage, Image image) {
+        avatarImage.setPreserveRatio(true);
+        if (image.getWidth() >= image.getHeight()) {
+            avatarImage.setFitHeight(AVATAR_SIZE);
+        } else {
+            avatarImage.setFitWidth(AVATAR_SIZE);
+        }
     }
 }

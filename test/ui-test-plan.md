@@ -17,8 +17,9 @@ The window should show each entered command on the right and Daddy's command res
 header should show compact white ASCII art without wrapping it and use the baby-pink theme. The greeting and
 command responses should omit command-line-only divider lines. A plain `list` command should display a graphical
 task panel with status, task type, description, and date details rather than console-style task text.
-After `bye`, the command field and Send button should be disabled. The circular avatar placeholders are intentionally
-blank until image assets are supplied.
+After `bye`, the command field and Send button should be disabled. Daddy Noel should appear as Daddy's large,
+circularly cropped left-side profile avatar, while My Little Pony should appear as the user's large, circularly
+cropped right-side profile avatar.
 
 ## Manual test: date and time parsing
 Aim: Verify that deadlines and events parse ISO dates/times and display friendly values.
