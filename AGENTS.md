@@ -42,7 +42,11 @@ Follow the project-specific `seedu-git-standard` skill for every future
 branch name and commit. Before committing, inspect the staged diff and apply
 the skill's commit-scope and message-format rules.
 Use lightweight tags unless the user requests an annotated tag.
-When proposing or creating a commit message, include enough detail to explain the rationale for the change.
+Every commit must have a full message consisting of a convention-compliant
+subject, a blank line, and a body wrapped at 72 characters. The body must
+explain what changed and why, following the situation, motivation, action,
+and rationale structure from the SE-EDU Git conventions. Leave low-level
+implementation details to the diff.
 Do not commit or push unless explicitly asked.
 
 ## UI testing after code updates
