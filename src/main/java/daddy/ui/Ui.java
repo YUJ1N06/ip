@@ -85,12 +85,7 @@ public class Ui {
     public void showTaskList(TaskList tasks) {
         printDivider();
         printLine(INDENT + " Here are the tasks in your list:");
-        int taskNumber = 1;
-        for (Task task : tasks) {
-            printLine(INDENT + " " + taskNumber + "." + task.getTypeIcon()
-                    + "[" + task.getStatusIcon() + "] " + task.getDisplayDescription());
-            taskNumber++;
-        }
+        showNumberedTasks(tasks);
         printDivider();
     }
 
@@ -103,13 +98,7 @@ public class Ui {
     public void showTasksOnDate(LocalDate date, List<Task> tasks) {
         printDivider();
         printLine(INDENT + " Tasks occurring on " + date + ":");
-        int displayedTaskNumber = 1;
-        for (Task task : tasks) {
-            printLine(INDENT + " " + displayedTaskNumber + "." + task.getTypeIcon()
-                    + "[" + task.getStatusIcon() + "] " + task.getDisplayDescription());
-            displayedTaskNumber++;
-        }
-        if (displayedTaskNumber == 1) {
+        if (showNumberedTasks(tasks) == 0) {
             printLine(INDENT + " No deadlines or events found for that date.");
         }
         printDivider();
@@ -123,13 +112,7 @@ public class Ui {
     public void showMatchingTasks(List<Task> tasks) {
         printDivider();
         printLine(INDENT + " Here are the matching tasks in your list:");
-        int displayedTaskNumber = 1;
-        for (Task task : tasks) {
-            printLine(INDENT + " " + displayedTaskNumber + "." + task.getTypeIcon()
-                    + "[" + task.getStatusIcon() + "] " + task.getDisplayDescription());
-            displayedTaskNumber++;
-        }
-        if (displayedTaskNumber == 1) {
+        if (showNumberedTasks(tasks) == 0) {
             printLine(INDENT + " No matching tasks found.");
         }
         printDivider();
@@ -204,6 +187,22 @@ public class Ui {
     public void showExit() {
         printLine(INDENT + "Bye. See you soon :)");
         printDivider();
+    }
+
+    /**
+     * Displays tasks with consecutive one-based numbers.
+     *
+     * @param tasks the tasks to display
+     * @return the number of tasks displayed
+     */
+    private int showNumberedTasks(Iterable<Task> tasks) {
+        int taskNumber = 1;
+        for (Task task : tasks) {
+            printLine(INDENT + " " + taskNumber + "." + task.getTypeIcon()
+                    + "[" + task.getStatusIcon() + "] " + task.getDisplayDescription());
+            taskNumber++;
+        }
+        return taskNumber - 1;
     }
 
     /** Prints a divider line with the standard indentation. */
