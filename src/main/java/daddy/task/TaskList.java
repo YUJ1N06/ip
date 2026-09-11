@@ -92,13 +92,9 @@ public class TaskList implements Iterable<Task> {
      */
     public List<Task> getTasksOccurringOn(LocalDate date) {
         assert date != null : "date must not be null";
-        List<Task> matchingTasks = new ArrayList<>();
-        for (Task task : tasks) {
-            if (task.occursOn(date)) {
-                matchingTasks.add(task);
-            }
-        }
-        return List.copyOf(matchingTasks);
+        return tasks.stream()
+                .filter(task -> task.occursOn(date))
+                .toList();
     }
 
     /**
@@ -111,13 +107,9 @@ public class TaskList implements Iterable<Task> {
     public List<Task> getTasksMatching(String keyword) {
         assert keyword != null : "keyword must not be null";
         String lowerCaseKeyword = keyword.toLowerCase(Locale.ROOT);
-        List<Task> matchingTasks = new ArrayList<>();
-        for (Task task : tasks) {
-            if (task.getDescription().toLowerCase(Locale.ROOT).contains(lowerCaseKeyword)) {
-                matchingTasks.add(task);
-            }
-        }
-        return List.copyOf(matchingTasks);
+        return tasks.stream()
+                .filter(task -> task.getDescription().toLowerCase(Locale.ROOT).contains(lowerCaseKeyword))
+                .toList();
     }
 
     /**
