@@ -79,13 +79,9 @@ public class TaskList implements Iterable<Task> {
      * @return an unmodifiable list of matching tasks in their list order
      */
     public List<Task> getTasksOccurringOn(LocalDate date) {
-        List<Task> matchingTasks = new ArrayList<>();
-        for (Task task : tasks) {
-            if (task.occursOn(date)) {
-                matchingTasks.add(task);
-            }
-        }
-        return List.copyOf(matchingTasks);
+        return tasks.stream()
+                .filter(task -> task.occursOn(date))
+                .toList();
     }
 
     /**
@@ -96,13 +92,9 @@ public class TaskList implements Iterable<Task> {
      */
     public List<Task> getTasksMatching(String keyword) {
         String lowerCaseKeyword = keyword.toLowerCase(Locale.ROOT);
-        List<Task> matchingTasks = new ArrayList<>();
-        for (Task task : tasks) {
-            if (task.getDescription().toLowerCase(Locale.ROOT).contains(lowerCaseKeyword)) {
-                matchingTasks.add(task);
-            }
-        }
-        return List.copyOf(matchingTasks);
+        return tasks.stream()
+                .filter(task -> task.getDescription().toLowerCase(Locale.ROOT).contains(lowerCaseKeyword))
+                .toList();
     }
 
     /**
