@@ -33,6 +33,18 @@ class TaskListTest {
     }
 
     /**
+     * Verifies that null values cannot break the task-list invariant.
+     */
+    @Test
+    void addTasks_nullArrayOrTask_assertionThrown() {
+        TaskList tasks = new TaskList();
+
+        assertThrows(AssertionError.class, () -> tasks.add((Task[]) null));
+        assertThrows(AssertionError.class, () -> tasks.add(new Todo("read book"), null));
+        assertEquals(0, tasks.size());
+    }
+
+    /**
      * Verifies that only valid zero-based task indexes are accepted.
      */
     @Test
@@ -58,6 +70,19 @@ class TaskListTest {
         assertEquals("X", task.getStatusIcon());
         assertSame(task, tasks.markTaskAsNotDone(0));
         assertEquals(" ", task.getStatusIcon());
+    }
+
+    /**
+     * Verifies that task-changing operations reject indexes outside the list.
+     */
+    @Test
+    void taskChangingOperations_invalidIndexes_assertionThrown() {
+        TaskList tasks = new TaskList();
+        tasks.add(new Todo("read book"));
+
+        assertThrows(AssertionError.class, () -> tasks.markTaskAsDone(-1));
+        assertThrows(AssertionError.class, () -> tasks.markTaskAsNotDone(1));
+        assertThrows(AssertionError.class, () -> tasks.removeTaskAt(1));
     }
 
     /**
@@ -116,6 +141,17 @@ class TaskListTest {
 
         assertEquals(List.of(matchingTodo, matchingDeadline), matchingTasks);
         assertThrows(UnsupportedOperationException.class, () -> matchingTasks.add(nonMatchingTask));
+    }
+
+    /**
+     * Verifies that query operations reject missing search criteria.
+     */
+    @Test
+    void queryTasks_nullCriteria_assertionThrown() {
+        TaskList tasks = new TaskList();
+
+        assertThrows(AssertionError.class, () -> tasks.getTasksOccurringOn(null));
+        assertThrows(AssertionError.class, () -> tasks.getTasksMatching(null));
     }
 
     /**
