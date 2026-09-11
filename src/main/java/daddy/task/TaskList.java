@@ -23,8 +23,13 @@ public class TaskList implements Iterable<Task> {
      * Adds one or more tasks to the end of the list in the supplied order.
      *
      * @param tasksToAdd the tasks to add
+     * @throws AssertionError if the task array or any task is null
      */
     public void add(Task... tasksToAdd) {
+        assert tasksToAdd != null : "tasks to add must not be null";
+        for (Task task : tasksToAdd) {
+            assert task != null : "task to add must not be null";
+        }
         Collections.addAll(tasks, tasksToAdd);
     }
 
@@ -43,8 +48,10 @@ public class TaskList implements Iterable<Task> {
      *
      * @param index the zero-based task index
      * @return the task that was marked
+     * @throws AssertionError if the task index is out of range
      */
     public Task markTaskAsDone(int index) {
+        assert hasTaskAt(index) : "task index must be in range";
         Task task = tasks.get(index);
         task.markAsDone();
         return task;
@@ -55,8 +62,10 @@ public class TaskList implements Iterable<Task> {
      *
      * @param index the zero-based task index
      * @return the task that was unmarked
+     * @throws AssertionError if the task index is out of range
      */
     public Task markTaskAsNotDone(int index) {
+        assert hasTaskAt(index) : "task index must be in range";
         Task task = tasks.get(index);
         task.markAsNotDone();
         return task;
@@ -67,8 +76,10 @@ public class TaskList implements Iterable<Task> {
      *
      * @param index the zero-based task index
      * @return the removed task
+     * @throws AssertionError if the task index is out of range
      */
     public Task removeTaskAt(int index) {
+        assert hasTaskAt(index) : "task index must be in range";
         return tasks.remove(index);
     }
 
@@ -77,8 +88,10 @@ public class TaskList implements Iterable<Task> {
      *
      * @param date the date to match
      * @return an unmodifiable list of matching tasks in their list order
+     * @throws AssertionError if the date is null
      */
     public List<Task> getTasksOccurringOn(LocalDate date) {
+        assert date != null : "date must not be null";
         return tasks.stream()
                 .filter(task -> task.occursOn(date))
                 .toList();
@@ -89,8 +102,10 @@ public class TaskList implements Iterable<Task> {
      *
      * @param keyword the text to find in task descriptions
      * @return an unmodifiable list of matching tasks in their list order
+     * @throws AssertionError if the keyword is null
      */
     public List<Task> getTasksMatching(String keyword) {
+        assert keyword != null : "keyword must not be null";
         String lowerCaseKeyword = keyword.toLowerCase(Locale.ROOT);
         return tasks.stream()
                 .filter(task -> task.getDescription().toLowerCase(Locale.ROOT).contains(lowerCaseKeyword))
