@@ -24,6 +24,8 @@ public enum CommandType {
     DELETE,
     /** Displays tasks whose descriptions contain a keyword. */
     FIND,
+    /** Finds the earliest working-hours slot of a requested duration. */
+    FREE,
     /** Represents a mark command without a task number. */
     MARK_MISSING_ARGUMENT,
     /** Represents an unmark command without a task number. */

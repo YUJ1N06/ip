@@ -47,6 +47,14 @@ list on 02-12-2019
 
 The Todo should be excluded, while the matching Deadline and Event should be listed.
 
+## Manual test: find the earliest free time
+Aim: Verify that a valid free-time request shows the earliest weekday slot without changing the task list.
+
+Enter `free 4h`. Daddy should show one four-hour slot between 09:00 and 18:00 on Monday to Friday. The slot
+should begin no earlier than the current minute, and it should not overlap any event in the task list. Todos,
+and deadlines should not affect the result, while completed events should still occupy their scheduled time.
+Enter `list` afterward and verify that no tasks were added, removed, or modified.
+
 ## Manual test: corrupted data recovery
 Aim: Verify that malformed records are reported and skipped while valid records still load.
 
@@ -153,6 +161,10 @@ unmark
 deadline
 event
 find
+free
+free four hours
+free 0h
+free 10h
 list
 mark abc
 deadline report
@@ -194,6 +206,18 @@ bye
     ____________________________________________________________
     ____________________________________________________________
      FIND?! Find what... Try: find book.
+    ____________________________________________________________
+    ____________________________________________________________
+     FREE?! Free for how long? Try: free 4h.
+    ____________________________________________________________
+    ____________________________________________________________
+     Use a whole-number duration ending in h or m. Try: free 4h or free 90m.
+    ____________________________________________________________
+    ____________________________________________________________
+     Free time must be longer than zero. Try: free 4h.
+    ____________________________________________________________
+    ____________________________________________________________
+     Daddy's workday runs from 09:00 to 18:00, so one free slot cannot exceed 9 hours.
     ____________________________________________________________
     ____________________________________________________________
      Here are the tasks in your list:

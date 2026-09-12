@@ -10,6 +10,7 @@ import daddy.command.AddCommand;
 import daddy.command.DeleteCommand;
 import daddy.command.ExitCommand;
 import daddy.command.FindCommand;
+import daddy.command.FreeCommand;
 import daddy.command.ListCommand;
 import daddy.command.ListOnDateCommand;
 import daddy.command.MarkCommand;
@@ -40,6 +41,8 @@ class ParserTest {
         assertInstanceOf(UnmarkCommand.class, parser.parseCommand("unmark 1"));
         assertInstanceOf(DeleteCommand.class, parser.parseCommand("delete 1"));
         assertInstanceOf(FindCommand.class, parser.parseCommand("find book"));
+        assertInstanceOf(FreeCommand.class, parser.parseCommand("free 4h"));
+        assertInstanceOf(FreeCommand.class, parser.parseCommand("free 90M"));
     }
 
     /**
@@ -57,6 +60,8 @@ class ParserTest {
                 parseError(parser, "delete").getMessage());
         assertEquals("FIND?! Find what... Try: find book.",
                 parseError(parser, "find").getMessage());
+        assertEquals("FREE?! Free for how long? Try: free 4h.",
+                parseError(parser, "free").getMessage());
     }
 
     /**
@@ -71,8 +76,17 @@ class ParserTest {
         assertEquals("That deadline date needs dd-MM-yyyy or dd-MM-yyyy HHmm format. "
                         + "Try: deadline return book /by 02-12-2019 1800",
                 parseError(parser, "deadline return book /by tomorrow").getMessage());
+        assertEquals("Use a whole-number duration ending in h or m. Try: free 4h or free 90m.",
+                parseError(parser, "free four hours").getMessage());
+        assertEquals("Free time must be longer than zero. Try: free 4h.",
+                parseError(parser, "free 0h").getMessage());
+        assertEquals("Daddy's workday runs from 09:00 to 18:00, so one free slot cannot exceed 9 hours.",
+                parseError(parser, "free 10h").getMessage());
+        assertEquals("An event must end after it starts. "
+                        + "Try: event meeting /from 02-12-2019 1400 /to 02-12-2019 1600",
+                parseError(parser, "event meeting /from 02-12-2026 1600 /to 02-12-2026 1400").getMessage());
         assertEquals("Daddy has no clue what 'dance' means. "
-                        + "Try todo, deadline, event, list, find, mark, unmark, delete, or bye.",
+                        + "Try todo, deadline, event, list, find, free, mark, unmark, delete, or bye.",
                 parseError(parser, "dance").getMessage());
     }
 

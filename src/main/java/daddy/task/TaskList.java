@@ -1,8 +1,13 @@
 package daddy.task;
 
+import java.time.DayOfWeek;
+import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -11,6 +16,10 @@ import java.util.Locale;
  * Stores the tasks managed by Daddy and provides list-level operations.
  */
 public class TaskList implements Iterable<Task> {
+    /** Marks the beginning of a weekday in which Daddy searches for free time. */
+    private static final LocalTime WORK_DAY_START = LocalTime.of(9, 0);
+    /** Marks the end of a weekday in which Daddy searches for free time. */
+    private static final LocalTime WORK_DAY_END = LocalTime.of(18, 0);
     /** Stores tasks in the same order in which they are displayed to the user. */
     private final List<Task> tasks;
 
@@ -110,6 +119,91 @@ public class TaskList implements Iterable<Task> {
         return tasks.stream()
                 .filter(task -> task.getDescription().toLowerCase(Locale.ROOT).contains(lowerCaseKeyword))
                 .toList();
+    }
+
+    /**
+     * Finds the earliest weekday slot that can contain a requested duration during working hours.
+     *
+     * <p>Only events block time. Event intervals are treated as including their start but excluding their end,
+     * so a free slot may begin at the exact time an event ends.</p>
+     *
+     * @param duration the required positive duration, no longer than the 09:00 to 18:00 working day
+     * @param searchStart the earliest date and time at which the slot may begin
+     * @return the start of the earliest matching slot
+     * @throws AssertionError if the duration or search start violates the method contract
+     */
+    public LocalDateTime findEarliestFreeTime(Duration duration, LocalDateTime searchStart) {
+        assert duration != null : "free-time duration must not be null";
+        assert searchStart != null : "free-time search start must not be null";
+        assert !duration.isZero() && !duration.isNegative() : "free-time duration must be positive";
+        assert duration.compareTo(Duration.between(WORK_DAY_START, WORK_DAY_END)) <= 0
+                : "free-time duration must fit within one working day";
+
+        LocalDate date = searchStart.toLocalDate();
+        while (true) {
+            if (isWeekend(date)) {
+                date = date.plusDays(1);
+                continue;
+            }
+
+            LocalDateTime dayStart = date.atTime(WORK_DAY_START);
+            LocalDateTime dayEnd = date.atTime(WORK_DAY_END);
+            LocalDateTime candidate = searchStart.toLocalDate().equals(date) && searchStart.isAfter(dayStart)
+                    ? searchStart : dayStart;
+            if (!candidate.isBefore(dayEnd) || candidate.plus(duration).isAfter(dayEnd)) {
+                date = date.plusDays(1);
+                continue;
+            }
+
+            for (Event event : getEventsOverlapping(dayStart, dayEnd)) {
+                LocalDateTime eventStart = event.getFrom().isBefore(dayStart) ? dayStart : event.getFrom();
+                LocalDateTime eventEnd = event.getTo().isAfter(dayEnd) ? dayEnd : event.getTo();
+                if (!eventEnd.isAfter(candidate)) {
+                    continue;
+                }
+                if (eventStart.isAfter(candidate) && !candidate.plus(duration).isAfter(eventStart)) {
+                    return candidate;
+                }
+                if (eventEnd.isAfter(candidate)) {
+                    candidate = eventEnd;
+                }
+                if (candidate.plus(duration).isAfter(dayEnd)) {
+                    break;
+                }
+            }
+
+            if (!candidate.plus(duration).isAfter(dayEnd)) {
+                return candidate;
+            }
+            date = date.plusDays(1);
+        }
+    }
+
+    /**
+     * Returns events that overlap one working day, ordered by their start times.
+     *
+     * @param dayStart the beginning of the working day
+     * @param dayEnd the end of the working day
+     * @return overlapping events ordered by start time
+     */
+    private List<Event> getEventsOverlapping(LocalDateTime dayStart, LocalDateTime dayEnd) {
+        return tasks.stream()
+                .filter(Event.class::isInstance)
+                .map(Event.class::cast)
+                .filter(event -> event.getTo().isAfter(dayStart) && event.getFrom().isBefore(dayEnd))
+                .sorted(Comparator.comparing(Event::getFrom))
+                .toList();
+    }
+
+    /**
+     * Returns whether a date falls outside Daddy's Monday-to-Friday working week.
+     *
+     * @param date the date to check
+     * @return whether the date is Saturday or Sunday
+     */
+    private boolean isWeekend(LocalDate date) {
+        DayOfWeek dayOfWeek = date.getDayOfWeek();
+        return dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY;
     }
 
     /**

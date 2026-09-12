@@ -1,7 +1,11 @@
 package daddy.ui;
 
+import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 import java.util.Scanner;
 import java.util.function.Consumer;
 
@@ -16,6 +20,9 @@ public class Ui {
     private static final String INDENT = "    ";
     /** Separates distinct messages in Daddy's console interface. */
     private static final String DIVIDER = "____________________________________________________________";
+    /** Formats the beginning of a free slot in a stable, friendly form. */
+    private static final DateTimeFormatter FREE_TIME_FORMAT = DateTimeFormatter.ofPattern(
+            "EEE, d MMM yyyy, HH:mm", Locale.ENGLISH);
     /** Reads commands entered through standard input. */
     private final Scanner scanner;
     /** Receives each complete line that Daddy displays. */
@@ -116,6 +123,36 @@ public class Ui {
             printLine(INDENT + " No matching tasks found.");
         }
         printDivider();
+    }
+
+    /**
+     * Displays the earliest free slot that can contain a requested duration.
+     *
+     * @param start the beginning of the free slot
+     * @param duration the duration requested by the user
+     */
+    public void showFreeTime(LocalDateTime start, Duration duration) {
+        LocalDateTime end = start.plus(duration);
+        printDivider();
+        printLine(INDENT + " Daddy found you some breathing room:");
+        printLine(INDENT + "   " + start.format(FREE_TIME_FORMAT) + "\u2013" + end.toLocalTime());
+        printLine(INDENT + " That's a " + formatDuration(duration)
+                + " slot. Guard it with your life, little one.");
+        printDivider();
+    }
+
+    /**
+     * Formats a duration as an adjectival hour or minute amount.
+     *
+     * @param duration the duration to describe
+     * @return a label such as {@code 4-hour} or {@code 90-minute}
+     */
+    private String formatDuration(Duration duration) {
+        long minutes = duration.toMinutes();
+        if (minutes % 60 == 0) {
+            return minutes / 60 + "-hour";
+        }
+        return minutes + "-minute";
     }
 
     /**

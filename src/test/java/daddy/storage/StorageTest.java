@@ -113,7 +113,8 @@ class StorageTest {
                 "T|1|keep me",
                 "BROKEN",
                 "D|0|return book|2026-12-02T18:00",
-                "E|x|bad");
+                "E|x|bad",
+                "E|0|backwards|2026-12-03T16:00|2026-12-03T14:00");
         Files.write(dataFile, originalRecords);
         Storage storage = new Storage(dataFile, temporaryDirectory.resolve("duke.txt"));
         TaskList tasks = new TaskList();
@@ -124,10 +125,12 @@ class StorageTest {
         assertEquals("keep me", taskAt(tasks, 0).getDescription());
         assertEquals("return book", taskAt(tasks, 1).getDescription());
         assertEquals(originalRecords, Files.readAllLines(temporaryDirectory.resolve("daddy.txt.backup")));
-        assertEquals(List.of("line 2: BROKEN", "line 4: E|x|bad"),
+        assertEquals(List.of("line 2: BROKEN", "line 4: E|x|bad",
+                        "line 5: E|0|backwards|2026-12-03T16:00|2026-12-03T14:00"),
                 Files.readAllLines(temporaryDirectory.resolve("daddy.txt.corrupt")));
         assertTrue(messages.stream().anyMatch(message -> message.contains("line 2")));
         assertTrue(messages.stream().anyMatch(message -> message.contains("line 4")));
+        assertTrue(messages.stream().anyMatch(message -> message.contains("line 5")));
     }
 
     /**

@@ -1,16 +1,20 @@
 package daddy.parser;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import daddy.command.AddCommand;
 import daddy.command.Command;
 import daddy.command.DeleteCommand;
 import daddy.command.ExitCommand;
 import daddy.command.FindCommand;
+import daddy.command.FreeCommand;
 import daddy.command.ListCommand;
 import daddy.command.ListOnDateCommand;
 import daddy.command.MarkCommand;
@@ -29,6 +33,10 @@ public class Parser {
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd-MM-yyyy");
     /** Parses date-and-time task values in day-month-year order. */
     private static final DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("dd-MM-yyyy HHmm");
+    /** Recognizes a whole-number duration followed by an hour or minute unit. */
+    private static final Pattern FREE_DURATION_FORMAT = Pattern.compile("^(\\d+)([hHmM])$");
+    /** Limits free-time requests to the length of Daddy's working day. */
+    private static final Duration MAX_FREE_DURATION = Duration.ofHours(9);
 
     /** Creates a parser for Daddy command lines. */
     public Parser() {
@@ -51,6 +59,7 @@ public class Parser {
             case MARK, UNMARK -> parseTaskStateCommand(commandType, arguments);
             case DELETE -> parseDeleteCommand(arguments);
             case FIND -> parseFindCommand(arguments);
+            case FREE -> parseFreeCommand(arguments);
             case MARK_MISSING_ARGUMENT -> throw new DaddyException(
                     "MARK?! Mark what... Try: mark 1 (after adding a task first).");
             case UNMARK_MISSING_ARGUMENT -> throw new DaddyException(
@@ -60,7 +69,7 @@ public class Parser {
             case FIND_MISSING_ARGUMENT -> throw new DaddyException(
                     "FIND?! Find what... Try: find book.");
             case UNKNOWN -> throw new DaddyException("Daddy has no clue what '" + input
-                    + "' means. Try todo, deadline, event, list, find, mark, unmark, delete, or bye.");
+                    + "' means. Try todo, deadline, event, list, find, free, mark, unmark, delete, or bye.");
         };
     }
 
@@ -92,6 +101,8 @@ public class Parser {
             return CommandType.DELETE_MISSING_ARGUMENT;
         } else if (input.equalsIgnoreCase("find")) {
             return CommandType.FIND_MISSING_ARGUMENT;
+        } else if (input.equalsIgnoreCase("free") || lowerCaseInput.startsWith("free ")) {
+            return CommandType.FREE;
         } else if (lowerCaseInput.startsWith("unmark ")) {
             return CommandType.UNMARK;
         } else if (lowerCaseInput.startsWith("delete ")) {
@@ -119,6 +130,7 @@ public class Parser {
             case DEADLINE -> input.length() == 8 ? "" : input.substring(9).trim();
             case EVENT -> input.length() == 5 ? "" : input.substring(6).trim();
             case MARK, FIND -> input.substring(5).trim();
+            case FREE -> input.length() == 4 ? "" : input.substring(5).trim();
             case UNMARK, DELETE -> input.substring(7).trim();
             default -> "";
         };
@@ -225,6 +237,40 @@ public class Parser {
     }
 
     /**
+     * Creates a command that finds the earliest free slot of a requested duration.
+     *
+     * @param durationText the requested whole-number duration followed by {@code h} or {@code m}
+     * @return a command that searches for the earliest matching free slot
+     * @throws DaddyException if the duration is missing, malformed, zero, or longer than one working day
+     */
+    private Command parseFreeCommand(String durationText) throws DaddyException {
+        if (durationText.isEmpty()) {
+            throw new DaddyException("FREE?! Free for how long? Try: free 4h.");
+        }
+
+        Matcher matcher = FREE_DURATION_FORMAT.matcher(durationText);
+        if (!matcher.matches()) {
+            throw new DaddyException("Use a whole-number duration ending in h or m. Try: free 4h or free 90m.");
+        }
+
+        try {
+            long amount = Long.parseLong(matcher.group(1));
+            if (amount == 0) {
+                throw new DaddyException("Free time must be longer than zero. Try: free 4h.");
+            }
+            Duration duration = matcher.group(2).equalsIgnoreCase("h")
+                    ? Duration.ofHours(amount) : Duration.ofMinutes(amount);
+            if (duration.compareTo(MAX_FREE_DURATION) > 0) {
+                throw new DaddyException("Daddy's workday runs from 09:00 to 18:00, "
+                        + "so one free slot cannot exceed 9 hours.");
+            }
+            return new FreeCommand(duration);
+        } catch (NumberFormatException | ArithmeticException exception) {
+            throw new DaddyException("That duration is too large. Try something smaller, such as: free 4h.");
+        }
+    }
+
+    /**
      * Creates a task from the details of a task-creation command.
      *
      * @param commandType the type of task to create
@@ -305,7 +351,13 @@ public class Parser {
                     + "Try: event meeting /from Mon 2pm /to 4pm");
         }
         try {
-            return new Event(description, parseDateTime(from), parseDateTime(to));
+            LocalDateTime startDateTime = parseDateTime(from);
+            LocalDateTime endDateTime = parseDateTime(to);
+            if (!endDateTime.isAfter(startDateTime)) {
+                throw new DaddyException("An event must end after it starts. "
+                        + "Try: event meeting /from 02-12-2019 1400 /to 02-12-2019 1600");
+            }
+            return new Event(description, startDateTime, endDateTime);
         } catch (DateTimeParseException exception) {
             throw new DaddyException("Event times need dd-MM-yyyy or dd-MM-yyyy HHmm format. "
                     + "Try: event meeting /from 02-12-2019 1400 /to 02-12-2019 1600");

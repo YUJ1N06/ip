@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -152,6 +153,95 @@ class TaskListTest {
 
         assertThrows(AssertionError.class, () -> tasks.getTasksOccurringOn(null));
         assertThrows(AssertionError.class, () -> tasks.getTasksMatching(null));
+    }
+
+    /** Verifies that an empty weekday schedule begins at the later of now and the working-day start. */
+    @Test
+    void findEarliestFreeTime_emptyWeekdaySchedule_returnsEarliestWorkingTime() {
+        TaskList tasks = new TaskList();
+        LocalDate monday = LocalDate.of(2026, 9, 14);
+
+        assertEquals(monday.atTime(9, 0),
+                tasks.findEarliestFreeTime(Duration.ofHours(4), monday.atTime(8, 30)));
+        assertEquals(monday.atTime(10, 15),
+                tasks.findEarliestFreeTime(Duration.ofMinutes(90), monday.atTime(10, 15)));
+    }
+
+    /** Verifies that todos and deadlines do not occupy free-time intervals. */
+    @Test
+    void findEarliestFreeTime_onlyTodosAndDeadlines_returnsUnblockedTime() {
+        TaskList tasks = new TaskList();
+        LocalDateTime searchStart = LocalDateTime.of(2026, 9, 14, 10, 0);
+        tasks.add(new Todo("read book"));
+        tasks.add(new Deadline("return book", searchStart.plusHours(1)));
+
+        assertEquals(searchStart, tasks.findEarliestFreeTime(Duration.ofHours(4), searchStart));
+    }
+
+    /** Verifies that overlapping, adjacent, and completed events form one continuous busy period. */
+    @Test
+    void findEarliestFreeTime_overlappingAdjacentAndDoneEvents_returnsTimeAfterBusyPeriod() {
+        TaskList tasks = new TaskList();
+        LocalDate date = LocalDate.of(2026, 9, 14);
+        Event firstEvent = new Event("briefing", date.atTime(9, 0), date.atTime(10, 30));
+        Event overlappingEvent = new Event("workshop", date.atTime(10, 0), date.atTime(12, 0));
+        Event adjacentEvent = new Event("lunch", date.atTime(12, 0), date.atTime(13, 0));
+        overlappingEvent.markAsDone();
+        tasks.add(firstEvent, overlappingEvent, adjacentEvent);
+
+        LocalDateTime slotStart = tasks.findEarliestFreeTime(Duration.ofHours(2), date.atTime(9, 0));
+
+        assertEquals(date.atTime(13, 0), slotStart);
+    }
+
+    /** Verifies that a slot may end when an event begins and begin when an event ends. */
+    @Test
+    void findEarliestFreeTime_exactEventBoundaries_returnsBoundarySlot() {
+        TaskList tasks = new TaskList();
+        LocalDate date = LocalDate.of(2026, 9, 14);
+        tasks.add(new Event("meeting", date.atTime(13, 0), date.atTime(14, 0)));
+
+        assertEquals(date.atTime(9, 0),
+                tasks.findEarliestFreeTime(Duration.ofHours(4), date.atTime(9, 0)));
+        assertEquals(date.atTime(14, 0),
+                tasks.findEarliestFreeTime(Duration.ofHours(4), date.atTime(13, 0)));
+    }
+
+    /** Verifies that weekend searches and multi-day events advance to the first usable weekday time. */
+    @Test
+    void findEarliestFreeTime_weekendAndMultiDayEvent_returnsMondayAfterEvent() {
+        TaskList tasks = new TaskList();
+        LocalDate friday = LocalDate.of(2026, 9, 11);
+        LocalDate monday = LocalDate.of(2026, 9, 14);
+        tasks.add(new Event("conference", friday.atTime(17, 0), monday.atTime(12, 0)));
+        tasks.add(new Event("after hours", monday.atTime(18, 0), monday.atTime(20, 0)));
+
+        LocalDateTime slotStart = tasks.findEarliestFreeTime(
+                Duration.ofHours(4), LocalDateTime.of(2026, 9, 12, 10, 0));
+
+        assertEquals(monday.atTime(12, 0), slotStart);
+    }
+
+    /** Verifies that a request that no longer fits today continues at the next weekday's opening time. */
+    @Test
+    void findEarliestFreeTime_tooLateToday_returnsNextWeekdayOpening() {
+        TaskList tasks = new TaskList();
+
+        LocalDateTime slotStart = tasks.findEarliestFreeTime(
+                Duration.ofHours(3), LocalDateTime.of(2026, 9, 14, 16, 0));
+
+        assertEquals(LocalDateTime.of(2026, 9, 15, 9, 0), slotStart);
+    }
+
+    /** Verifies that durations must be positive and fit within one working day. */
+    @Test
+    void findEarliestFreeTime_invalidDuration_assertionThrown() {
+        TaskList tasks = new TaskList();
+        LocalDateTime searchStart = LocalDateTime.of(2026, 9, 14, 9, 0);
+        Duration excessiveDuration = Duration.ofHours(10);
+
+        assertThrows(AssertionError.class, () -> tasks.findEarliestFreeTime(Duration.ZERO, searchStart));
+        assertThrows(AssertionError.class, () -> tasks.findEarliestFreeTime(excessiveDuration, searchStart));
     }
 
     /**

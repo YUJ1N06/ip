@@ -1,30 +1,36 @@
-# Duke User Guide
+# Daddy User Guide
 
-// Update the title above to match the actual product name
+Daddy is a task manager that accepts commands through its command-line or JavaFX chat interface.
 
-// Product screenshot goes here
+## Finding the earliest free time
 
-// Product intro goes here
+Use `free DURATION` to find the earliest working-hours slot that is long enough for you.
 
-## Adding deadlines
+Examples:
 
-// Describe the action and its outcome.
-
-// Give examples of usage
-
-Example: `keyword (optional arguments)`
-
-// A description of the expected outcome goes here
-
-```
-expected output
+```text
+free 4h
+free 90m
 ```
 
-## Feature ABC
+The duration must be a positive whole number followed immediately by `h` for hours or `m` for minutes. Units are
+case-insensitive. A request cannot be longer than nine hours.
 
-// Feature details
+Daddy searches using these rules:
 
+- The search starts from the current local time, rounded up to the next whole minute when necessary.
+- Working hours are 09:00 to 18:00, Monday to Friday.
+- Only events occupy time. Todos and deadlines do not block a free slot.
+- Completed events still occupy their scheduled time.
+- Events may overlap or touch each other; Daddy treats those events as one continuous busy period.
+- A free slot may start at the exact time an event ends.
 
-## Feature XYZ
+For example, Daddy can respond with:
 
-// Feature details
+```text
+Daddy found you some breathing room:
+  Mon, 14 Sep 2026, 09:00–13:00
+That's a 4-hour slot. Guard it with your life, little one.
+```
+
+Finding a free time does not add, remove, mark, or otherwise modify any task.
